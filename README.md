@@ -27,4 +27,11 @@ This sample repo contains the minimum code to demonstrate OpenId Connect and Due
 1. get new access token by calling `POST https://localhost:5001/connect/token`
 1. use the token and call weatherapi (in Authorization header)
 
+## Step 3: Add Interactive Client
+
+1. add test user in `.AddTestUsers()` 
+1. add AddInMemoryIdentityResources `.AddTestUsers()` 
+1. add new interactive client `.AddInMemoryClients()` 
+1. check `https://localhost:5001/.well-known/openid-configuration`
+
 

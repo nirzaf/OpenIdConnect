@@ -35,10 +35,31 @@ namespace idsserver
                         AllowedGrantTypes = GrantTypes.ClientCredentials,
                         ClientSecrets = { new Secret("SuperSecretPassword".Sha256())},
                         AllowedScopes = { "weatherapi.read" }
-                    }
+                    },
+                    new Client
+                    {
+                        ClientId = "interactive",
+                        ClientSecrets = { new Secret("SuperSecretPassword2".Sha256()) },
+
+                        AllowedGrantTypes = GrantTypes.Code,
+
+                        RedirectUris = { "http://localhost:3000/signin-oidc" },
+
+                        AllowedScopes = { "openid", "profile", "weatherapi.read" }
+                    },
                 })
-                .AddInMemoryIdentityResources(new List<IdentityResource>())
-                .AddTestUsers(new List<TestUser>());
+                .AddInMemoryIdentityResources(new List<IdentityResource>() {
+                    new IdentityResources.OpenId(),
+                    new IdentityResources.Profile()
+                })
+                .AddTestUsers(new List<TestUser>() {
+                    new TestUser
+                        {
+                            SubjectId = "alice_123",
+                            Username = "alice",
+                            Password = "alice"
+                        }
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
