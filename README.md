@@ -1,4 +1,4 @@
-## Introduction to OpenID Connect, OAuth2 and Duende Identity Server (aka. IdentityServer5)
+## OpenID Connect, OAuth2 with Duende Identity Server
 
 This sample repo contains the minimum code to demonstrate OpenId Connect and Duende Identity Server. It contains the following projects:
 
