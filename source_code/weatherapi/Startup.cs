@@ -33,9 +33,6 @@ namespace weatherapi
                 {
                     options.Audience = "weatherapi";
                     options.Authority = "https://localhost:5001";
-
-                    // ignore self-signed ssl 
-                    options.BackchannelHttpHandler = new HttpClientHandler { ServerCertificateCustomValidationCallback = delegate { return true; } };
                 });
 
             services.AddControllers();
