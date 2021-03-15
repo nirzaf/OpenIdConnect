@@ -34,3 +34,12 @@ This sample repo contains the minimum code to demonstrate OpenId Connect and Due
 1. check `https://localhost:5001/.well-known/openid-configuration`
 
 
+## Step 5: Add standard login UI from Duende Quick start UI
+
+1. run `curl -L https://raw.githubusercontent.com/DuendeSoftware/IdentityServer.Quickstart.UI/main/getmain.sh | bash` inside `ids-server` 
+1. this will add 3 new folders to the project: `QuickStart`,`Views` and `wwwroot`
+1. add `services.AddControllersWithViews();`
+1. add `app.UseStaticFiles();`
+1. add `app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());`
+1. open https://localhost:5001/account/login and login using `alice` and `alice`
+
