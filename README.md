@@ -4,8 +4,7 @@ This sample repo contains the minimum code to demonstrate OpenId Connect and Due
 
 1. `ids-server`: Duende IdentityServer using In Memory provider, this is listening on https://localhost:5001
 1. `weatherapi`: API which is protected by the IdentityServer
-1. `SPA-client`: a React Client which allows user to login using Open Id connect
-1. `MVC-client`: a ASP.NET MVC client which allows user to login using Open Id connect
+1. `SPA-client`: a Angular Client which allows user to login using Open Id connect
 
 ## Step 1: Add new empty, in Memory Identity Server
 
