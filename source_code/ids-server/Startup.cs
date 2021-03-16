@@ -20,8 +20,7 @@ namespace idsserver
         {
             services.AddIdentityServer()
                 .AddInMemoryApiScopes(new List<ApiScope> {
-                    new ApiScope("weatherapi.read", "Read Access to API"),
-                    new ApiScope("weatherapi.write", "Write Access to API")
+                    new ApiScope("weatherapi.read", "Read Weather API"),
                 })
                 .AddInMemoryApiResources(new List<ApiResource>() {
                     new ApiResource("weatherapi") {
@@ -39,14 +38,14 @@ namespace idsserver
                     new Client
                     {
                         ClientId = "interactive",
-
+            
                         AllowedGrantTypes = GrantTypes.Code,
                         RequireClientSecret = false,
                         RequirePkce = true,
-
+            
                         RedirectUris = { "http://localhost:3000/signin-oidc" },
-                        PostLogoutRedirectUris = { "http://localhost:3000" }, 
-
+                        PostLogoutRedirectUris = { "http://localhost:3000" },
+            
                         AllowedScopes = { "openid", "profile", "weatherapi.read" }
                     },
                 })
@@ -62,7 +61,8 @@ namespace idsserver
                             Password = "alice"
                         }
                 });
-
+            
+            
             // add views
             services.AddControllersWithViews();
 

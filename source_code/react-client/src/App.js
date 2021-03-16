@@ -2,7 +2,19 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 import { UserManager } from "oidc-client";
 
-// 1. add config
+// 1. add 2 routes
+function App() {
+  return (
+    <BrowserRouter>
+      <Switch>
+        <Route path="/signin-oidc" component={Callback} />
+        <Route path="/" component={HomePage} />
+      </Switch>
+    </BrowserRouter>
+  );
+}
+
+// 2. add IDS server config and Home component
 const IDENTITY_CONFIG = {
   authority: "https://localhost:5001",
   client_id: "interactive",
@@ -48,6 +60,7 @@ function HomePage() {
   );
 }
 
+// 3. callback component
 function Callback() {
   useEffect(() => {
     var mgr = new UserManager({
@@ -58,17 +71,6 @@ function Callback() {
   }, []);
 
   return <p>Loading...</p>;
-}
-
-function App() {
-  return (
-    <BrowserRouter>
-      <Switch>
-        <Route path="/signin-oidc" component={Callback} />
-        <Route path="/" component={HomePage} />
-      </Switch>
-    </BrowserRouter>
-  );
 }
 
 export default App;
