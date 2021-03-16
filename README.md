@@ -1,10 +1,10 @@
-## OpenID Connect, OAuth2 with Duende Identity Server
+## OpenID Connect, OAuth2 with Duende Identity Server + React
 
 This sample repo contains the minimum code to demonstrate OpenId Connect and Duende Identity Server. It contains the following projects:
 
 - `ids-server`: Duende IdentityServer using In Memory provider, this is listening on https://localhost:5001
 - `weatherapi`: API which is protected by the IdentityServer
-- `react-client`: a Angular Client which allows user to login using Open Id connect
+- `react-client`: a React Client which allows user to login using Open Id connect
 
 ## Step 1: Add new empty, in Memory Identity Server
 
