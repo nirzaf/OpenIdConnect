@@ -197,11 +197,17 @@ app.UseRouting();
 ```
 
 - create new React app by running `npx create-react-app react-client` 
-- cd into the `react-client` and run `npm i oidc-client react-router-dom`
+
+```bash
+# from root
+npx create-react-app react-client
+cd react-client
+npm i oidc-client react-router-dom
+```
+
 - replace content of `App()` function with the following
 
 ```jsx
-
 // App.js
 function App() {
   return (
@@ -229,7 +235,6 @@ const IDENTITY_CONFIG = {
 ```
 
 - in the same file add HomePage() component, this component will display `login` button if user is not logged in
-
 
 ```javascript
 // App.js
