@@ -6,13 +6,20 @@ This sample repo contains the minimum code to demonstrate OpenId Connect and Due
 - `weatherapi`: API which is protected by the IdentityServer
 - `react-client`: a React Client which allows user to login using Identity Server and communicate with the Weather API
 
-## Step 1: Add new empty, in Memory Identity Server
+## Step 1: Add new empty InMemory Duende IdentityServer
 
-- run `dotnet new web` in the `ids-server` folder
-- run `dotnet add package Duende.IdentityServer` 
-- import Duende packages and add `services.AddIdentityServer()` 
+- create new Duende Identity Server project
+
+```bash
+mkdir ids-server
+cd ids-server
+dotnet new web
+dotnet add package Duende.IdentityServer
+```
+- add `services.AddIdentityServer()` 
 
 ```csharp
+// inside ConfigureServices() method
 services.AddIdentityServer()
   .AddInMemoryClients(new List<Client>())
   .AddInMemoryIdentityResources(new List<IdentityResource>())
@@ -26,7 +33,15 @@ services.AddIdentityServer()
 
 ## Step 2: Add new Web API project
 
-- run `dotnet new webapi` in the `weatherapi` folder
+- add new Web API project in the `weatherapi` folder
+
+```bash
+# on root folder
+mkdir weatherapi
+cd weatherapi
+dotnet new webapi
+```
+
 - change `launchSettings.json` and update applicationUrl to `https://localhost:5002;http://localhost:5003`
 - run `dotnet watch run` and open `https://localhost:5002/WeatherForecast` to see the json weather data 
 
@@ -36,7 +51,7 @@ services.AddIdentityServer()
 
 ```csharp
 
-// inside ConfigureServices() method of 
+// inside ConfigureServices() method of weather API
 services.AddAuthentication("Bearer")
   .AddJwtBearer("Bearer", options =>
   {
@@ -67,7 +82,7 @@ public class WeatherForecastController : ControllerBase
 - add clients, resource and scope in the `startup.cs` of the IdentityServer
 
 ```csharp
-// ConfigureServices() of startup.cs
+// ConfigureServices(), startup.cs of ids-server
 services.AddIdentityServer()
   .AddInMemoryApiScopes(new List<ApiScope> {
       new ApiScope("weatherapi.read", "Read Access to API"),
