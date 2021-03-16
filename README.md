@@ -19,13 +19,22 @@ dotnet add package Duende.IdentityServer
 - add `services.AddIdentityServer()` 
 
 ```csharp
-// inside ConfigureServices() method
+// startup.cs
+// using section (>idsImportDuende)
+
+using Duende.IdentityServer.Models;
+using Duende.IdentityServer.Test;
+
+// then inside ConfigureServices() method (>idsAddIdsEmpty)
 services.AddIdentityServer()
   .AddInMemoryClients(new List<Client>())
   .AddInMemoryIdentityResources(new List<IdentityResource>())
   .AddInMemoryApiResources(new List<ApiResource>())
   .AddInMemoryApiScopes(new List<ApiScope>())
   .AddTestUsers(new List<TestUser>());
+
+// in Configure(), after UseRouting()
+app.UseIdentityServer();
 ```
 
 - run `dotnet watch run` and open `https://localhost:5001/.well-known/openid-configuration` to see the open Id connect discovery doc
@@ -52,6 +61,8 @@ dotnet new webapi
 ```csharp
 
 // inside ConfigureServices() method of weather API
+// >idsAddJwtAuth
+
 services.AddAuthentication("Bearer")
   .AddJwtBearer("Bearer", options =>
   {
@@ -63,9 +74,9 @@ services.AddAuthentication("Bearer")
   });
 
 
-// inside Configure() method
-app.UseRouting();
+// inside Configure() method, after UseRouting, before UseAuthorization()
 
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -83,6 +94,8 @@ public class WeatherForecastController : ControllerBase
 
 ```csharp
 // ConfigureServices(), startup.cs of ids-server
+// >idsAddM2mClient
+
 services.AddIdentityServer()
   .AddInMemoryApiScopes(new List<ApiScope> {
       new ApiScope("weatherapi.read", "Read Access to API"),
@@ -118,7 +131,6 @@ GET https://localhost:5002/WeatherForecast
 Authorization: Bearer <TOKEN>
 ```
 ## Step 4: Add Quick start UI from Duende Quick start UI
-
 - in ids-server folder
 - run `curl -L https://raw.githubusercontent.com/DuendeSoftware/IdentityServer.Quickstart.UI/main/getmain.sh | bash` inside `ids-server`, this will download 3 new folders to the project: `QuickStart`,`Views` and `wwwroot`
 - add `services.AddControllersWithViews();` 
@@ -131,24 +143,17 @@ services.AddControllersWithViews();
 
 
 // inside Configure() method
+// before UseRouting()
 app.UseStaticFiles();
+
 ...
-app.UseRouting();
-app.UseIdentityServer();
+// after UseIdentityServer() >idsMapDefaultController 
 app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
 ```
-
-- open https://localhost:5001/account/login and login using `alice` and `alice`
-
-## Step 5: Add React Interactive Client
-
-- in `ids-server` add test users `.AddTestUsers()`  and `AddInMemoryIdentityResources()`
-
+- Add test user
 ```csharp
-.AddInMemoryIdentityResources(new List<IdentityResource>() {
-    new IdentityResources.OpenId(),
-    new IdentityResources.Profile()
-})
+
+// >idsAddTestUser
 .AddTestUsers(new List<TestUser>() {
     new TestUser
         {
@@ -158,27 +163,39 @@ app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
         }
 });
 ```
+- open https://localhost:5001/account/login and login using `alice` and `alice`
 
-- add new interactive client `.AddInMemoryClients()` 
+## Step 5: Add React Interactive Client
+
+- in `ids-server` and `AddInMemoryIdentityResources()` and  add new client `.AddInMemoryClients()` 
 
 ```csharp
-
+// >idsAddInteractiveClient 
 .AddInMemoryClients(new List<Client> {
-  // other clients.,
-  new Client
-  {
-      ClientId = "interactive",
+    new Client
+    {
+        ClientId = "m2m.client",
+        AllowedGrantTypes = GrantTypes.ClientCredentials,
+        ClientSecrets = { new Secret("SuperSecretPassword".Sha256())},
+        AllowedScopes = { "weatherapi.read" }
+    },
+    new Client
+    {
+        ClientId = "interactive",
 
-      AllowedGrantTypes = GrantTypes.Code,
-      RequireClientSecret = false,
-      RequirePkce = true,
+        AllowedGrantTypes = GrantTypes.Code,
+        RequireClientSecret = false,
 
-      RedirectUris = { "http://localhost:3000/signin-oidc" },
-      PostLogoutRedirectUris = { "http://localhost:3000" },
+        RedirectUris = { "http://localhost:3000/signin-oidc" },
+        PostLogoutRedirectUris = { "http://localhost:3000" },
 
-      AllowedScopes = { "openid", "profile", "weatherapi.read" }
-  },
-  })
+        AllowedScopes = { "openid", "profile", "weatherapi.read" }
+    },
+})
+.AddInMemoryIdentityResources(new List<IdentityResource>() {
+    new IdentityResources.OpenId(),
+    new IdentityResources.Profile()
+})
 ```
 
 - enable Cors on **both** ids_server and weather API by adding `services.AddCors();`, this will make sure React app can communicate with both backend servers
@@ -188,6 +205,7 @@ app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
 services.AddCors();
 
 // inside Configure() method  for BOTH weatherapi and ids-server
+// Before UseRouting(), >addCors
 app.UseCors(config => config
     .AllowAnyOrigin()
     .AllowAnyHeader()
@@ -208,7 +226,7 @@ npm i oidc-client react-router-dom
 - replace content of `App()` function with the following
 
 ```jsx
-// App.js
+// App.js >idsReactApp
 function App() {
   return (
     <BrowserRouter>
@@ -220,10 +238,11 @@ function App() {
   );
 }
 ```
-
-- add OpenID connect config object
+- in the same file add HomePage() component, this component will display `login` button if user is not logged in
 
 ```javascript
+// App.js >idsReactAppHomePage
+
 const IDENTITY_CONFIG = {
   authority: "https://localhost:5001",
   client_id: "interactive",
@@ -232,12 +251,7 @@ const IDENTITY_CONFIG = {
   response_type: "code",
   scope: "openid weatherapi",
 };
-```
 
-- in the same file add HomePage() component, this component will display `login` button if user is not logged in
-
-```javascript
-// App.js
 function HomePage() {
   const [state, setState] = useState(null);
   var mgr = new UserManager(IDENTITY_CONFIG);
@@ -277,9 +291,8 @@ function HomePage() {
 
 - in the same file add Redirect() component, this will handle OAuth2 redirect
 
-
 ```javascript
-// App.js
+// App.js >idsReactAppCallback
 function Callback() {
   useEffect(() => {
     var mgr = new UserManager({
