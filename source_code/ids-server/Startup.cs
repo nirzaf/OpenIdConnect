@@ -39,11 +39,13 @@ namespace idsserver
                     new Client
                     {
                         ClientId = "interactive",
-                        ClientSecrets = { new Secret("SuperSecretPassword2".Sha256()) },
 
                         AllowedGrantTypes = GrantTypes.Code,
+                        RequireClientSecret = false,
+                        RequirePkce = true,
 
                         RedirectUris = { "http://localhost:3000/signin-oidc" },
+                        PostLogoutRedirectUris = { "http://localhost:3000" }, 
 
                         AllowedScopes = { "openid", "profile", "weatherapi.read" }
                     },
@@ -55,7 +57,7 @@ namespace idsserver
                 .AddTestUsers(new List<TestUser>() {
                     new TestUser
                         {
-                            SubjectId = "alice_123",
+                            SubjectId = "Alice",
                             Username = "alice",
                             Password = "alice"
                         }
@@ -63,6 +65,10 @@ namespace idsserver
 
             // add views
             services.AddControllersWithViews();
+
+            // add CORS
+            services.AddCors();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -73,6 +79,13 @@ namespace idsserver
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            // use Cors
+            app.UseCors(config => config
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+            );
 
             app.UseRouting();
             app.UseIdentityServer();

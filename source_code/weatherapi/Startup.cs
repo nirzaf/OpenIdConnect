@@ -33,6 +33,9 @@ namespace weatherapi
                 {
                     options.Audience = "weatherapi";
                     options.Authority = "https://localhost:5001";
+
+                    // ignore self-signed ssl 
+                    options.BackchannelHttpHandler = new HttpClientHandler { ServerCertificateCustomValidationCallback = delegate { return true; } };
                 });
 
             services.AddControllers();
@@ -40,6 +43,9 @@ namespace weatherapi
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "weatherapi", Version = "v1" });
             });
+
+            // add CORS
+            services.AddCors();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,10 +60,18 @@ namespace weatherapi
 
             app.UseHttpsRedirection();
 
+            // use Cors
+            app.UseCors(config => config
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+            );
+
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
+
 
             app.UseEndpoints(endpoints =>
             {

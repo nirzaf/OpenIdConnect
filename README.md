@@ -36,10 +36,116 @@ This sample repo contains the minimum code to demonstrate OpenId Connect and Due
 
 ## Step 5: Add standard login UI from Duende Quick start UI
 
-1. run `curl -L https://raw.githubusercontent.com/DuendeSoftware/IdentityServer.Quickstart.UI/main/getmain.sh | bash` inside `ids-server` 
-1. this will add 3 new folders to the project: `QuickStart`,`Views` and `wwwroot`
+1. run `curl -L https://raw.githubusercontent.com/DuendeSoftware/IdentityServer.Quickstart.UI/main/getmain.sh | bash` inside `ids-server`, this will add 3 new folders to the project: `QuickStart`,`Views` and `wwwroot`
 1. add `services.AddControllersWithViews();`
 1. add `app.UseStaticFiles();`
 1. add `app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());`
 1. open https://localhost:5001/account/login and login using `alice` and `alice`
 
+## Step 6: Add React client app
+
+1. enable Cors on both ids_server and weather API by adding `services.AddCors();` and 
+
+```csharp
+app.UseCors(config => config
+    .AllowAnyOrigin()
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+);
+```
+
+1. create new React app by running `npx create-react-app react-client` 
+1. cd into the `react-client` and run `npm i oidc-client react-router-dom`
+1. replace `App()` with the following 2 routes 
+
+```jsx
+
+// App.js
+function App() {
+  return (
+    <BrowserRouter>
+      <Switch>
+        <Route path="/signin-oidc" component={Callback} />
+        <Route path="/" component={HomePage} />
+      </Switch>
+    </BrowserRouter>
+  );
+}
+```
+
+1. add OpenID connect config object
+
+```javascript
+const IDENTITY_CONFIG = {
+  authority: "https://localhost:5001",
+  client_id: "interactive",
+  redirect_uri: "http://localhost:3000/signin-oidc",
+  post_logout_redirect_uri: "http://localhost:3000",
+  response_type: "code",
+  scope: "openid weatherapi",
+};
+```
+1. in the same file add HomePage() component, this component will display `login` button if user is not logged in
+
+
+```javascript
+// App.js
+function HomePage() {
+  const [state, setState] = useState(null);
+  var mgr = new UserManager(IDENTITY_CONFIG);
+
+  useEffect(() => {
+    mgr.getUser().then((user) => {
+      if (user) {
+        fetch("https://localhost:5002/weatherforecast", {
+          headers: {
+            Authorization: "Bearer " + user.access_token,
+          },
+        })
+          .then((resp) => resp.json())
+          .then((data) => setState({ user, data }));
+      }
+    });
+  }, []);
+
+  return (
+    <div>
+      {state ? (
+        <>
+          <h3>Welcome {state?.user?.profile?.sub}</h3>
+          <pre>{JSON.stringify(state?.data, null, 2)}</pre>
+          <button onClick={() => mgr.signoutRedirect()}>Log out</button>
+        </>
+      ) : (
+        <>
+          <h3>React Weather App</h3>
+          <button onClick={() => mgr.signinRedirect()}>Login</button>
+        </>
+      )}
+    </div>
+  );
+}
+```
+
+1. in the same file add Redirect() component, this will handle OAuth2 redirect
+
+
+```javascript
+// App.js
+function Callback() {
+  useEffect(() => {
+    var mgr = new UserManager({
+      response_mode: "query",
+    });
+
+    mgr.signinRedirectCallback().then(() => (window.location.href = "/"));
+  }, []);
+
+  return <p>Loading...</p>;
+}
+```
+
+1. open http://localhost:3000, click on `Login` button
+1. login with `alice` and `alice`
+1. you should be redirected back to the React app with your name and weather information
+1. click `Logout`, you should be redirected back to the Identity Server, with a link to take you back to the React app
