@@ -15,18 +15,17 @@ function App() {
 }
 
 // 2. add IDS server config and Home component
-const IDENTITY_CONFIG = {
-  authority: "https://localhost:5001",
-  client_id: "interactive",
-  redirect_uri: "http://localhost:3000/signin-oidc",
-  post_logout_redirect_uri: "http://localhost:3000",
-  response_type: "code",
-  scope: "openid profile weatherapi.read",
-};
 
 function HomePage() {
   const [state, setState] = useState(null);
-  var mgr = new UserManager(IDENTITY_CONFIG);
+  var mgr = new UserManager({
+    authority: "https://localhost:5001",
+    client_id: "interactive",
+    redirect_uri: "http://localhost:3000/signin-oidc",
+    post_logout_redirect_uri: "http://localhost:3000",
+    response_type: "code",
+    scope: "openid profile weatherapi.read",
+  });
 
   useEffect(() => {
     mgr.getUser().then((user) => {
