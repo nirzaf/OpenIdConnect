@@ -148,6 +148,7 @@ app.UseStaticFiles();
 
 ...
 // after UseIdentityServer() >idsMapDefaultController 
+app.UseAuthorization();
 app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
 ```
 - Add test user
