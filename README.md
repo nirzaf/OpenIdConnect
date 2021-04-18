@@ -379,3 +379,7 @@ services.AddIdentityServer()
 - then run `dotnet ef migrations add InitialIdsMigration -c PersistedGrantDbContext` to add Initial Migration
 - you will see the initial migration code for the database which is creating 3 tables
 - now run `dotnet ef database update -c PersistedGrantDbContext` to create the DB file 
+- now add the tables for the ConfigurationContext
+- then run `dotnet ef migrations add InitialIdsMigration -c ConfigurationDbContext` to add Initial Migration
+- now run `dotnet ef database update -c ConfigurationDbContext` to create the DB file 
+- open the sqlite DB (you can install the sqlite VSCode Extension to view the data), you should see all the tables it created
