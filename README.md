@@ -321,7 +321,7 @@ function Callback() {
 - you should be redirected back to the React app with your name and weather information
 - click `Logout`, you should be redirected back to the Identity Server, with a link to take you back to the React app
 
-## Step 6: Replace in memory provider with Entity Framework
+## Step 6: Replace in memory provider with EntityFrameworkCore
 
 - now that we have Identity Server 5 working with React and a API client, let's see how we can replace the in memory provider with Entity framework (using Sqlite)
 - first, install the follow Nuget package into the Duende Identity Server
@@ -383,3 +383,5 @@ services.AddIdentityServer()
 - then run `dotnet ef migrations add InitialIdsMigration -c ConfigurationDbContext` to add Initial Migration
 - now run `dotnet ef database update -c ConfigurationDbContext` to create the DB file 
 - open the sqlite DB (you can install the sqlite VSCode Extension to view the data), you should see all the tables it created
+- now run `dotnet run` again and open https://localhost:5001/.well-known/openid-configuration again
+- you should see it is empty again (no scopes, no clients)
