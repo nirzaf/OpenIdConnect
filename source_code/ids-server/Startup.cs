@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Test;
 
@@ -14,10 +15,19 @@ namespace idsserver
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
+
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            var connectStr = Configuration.GetConnectionString("DefaultConnection");
+            
             services.AddIdentityServer()
                 .AddInMemoryApiScopes(new List<ApiScope> {
                     new ApiScope("weatherapi.read", "Read Weather API"),
@@ -38,14 +48,14 @@ namespace idsserver
                     new Client
                     {
                         ClientId = "interactive",
-            
+
                         AllowedGrantTypes = GrantTypes.Code,
                         RequireClientSecret = false,
                         RequirePkce = true,
-            
+
                         RedirectUris = { "http://localhost:3000/signin-oidc" },
                         PostLogoutRedirectUris = { "http://localhost:3000" },
-            
+
                         AllowedScopes = { "openid", "profile", "weatherapi.read" }
                     },
                 })
@@ -61,8 +71,8 @@ namespace idsserver
                             Password = "alice"
                         }
                 });
-            
-            
+
+
             // add views
             services.AddControllersWithViews();
 
