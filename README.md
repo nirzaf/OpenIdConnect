@@ -350,4 +350,32 @@ dotnet add package Duende.IdentityServer.EntityFramework
   "AllowedHosts": "*"
 }
 ```
+
 - now inject `IConfiguration` into startup.cs class of the IDS
+- remove InMemory providers with the following:
+
+```csharp
+var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+services.AddIdentityServer()
+  .AddConfigurationStore(options =>
+  {
+      options.ConfigureDbContext = builder => builder.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
+  })
+  .AddOperationalStore(options =>
+  {
+      options.ConfigureDbContext = builder => builder.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
+  })
+  .AddTestUsers(new List<TestUser>() {
+    new TestUser
+      {
+          SubjectId = "Alice",
+          Username = "alice",
+          Password = "alice"
+      }
+  });
+```
+
+- where `connectStr` is coming from `Configuration.GetConnectionString("DefaultConnection")`
+- then run `dotnet ef migrations add InitialIdsMigration -c PersistedGrantDbContext` to add Initial Migration
+- you will see the initial migration code for the database which is creating 3 tables
+- now run `dotnet ef database update -c PersistedGrantDbContext` to create the DB file 

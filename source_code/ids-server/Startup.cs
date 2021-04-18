@@ -10,6 +10,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Test;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace idsserver
 {
@@ -27,41 +29,18 @@ namespace idsserver
         public void ConfigureServices(IServiceCollection services)
         {
             var connectStr = Configuration.GetConnectionString("DefaultConnection");
-            
+            var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+
             services.AddIdentityServer()
-                .AddInMemoryApiScopes(new List<ApiScope> {
-                    new ApiScope("weatherapi.read", "Read Weather API"),
+                // add Configuration DB context 
+                // dotnet ef migrations add InitialIdsMigration -c PersistedGrantDbContext
+                .AddConfigurationStore(options =>
+                {
+                    options.ConfigureDbContext = builder => builder.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
                 })
-                .AddInMemoryApiResources(new List<ApiResource>() {
-                    new ApiResource("weatherapi") {
-                        Scopes = { "weatherapi.read" },
-                    }
-                })
-                .AddInMemoryClients(new List<Client> {
-                    new Client
-                    {
-                        ClientId = "m2m.client",
-                        AllowedGrantTypes = GrantTypes.ClientCredentials,
-                        ClientSecrets = { new Secret("SuperSecretPassword".Sha256())},
-                        AllowedScopes = { "weatherapi.read" }
-                    },
-                    new Client
-                    {
-                        ClientId = "interactive",
-
-                        AllowedGrantTypes = GrantTypes.Code,
-                        RequireClientSecret = false,
-                        RequirePkce = true,
-
-                        RedirectUris = { "http://localhost:3000/signin-oidc" },
-                        PostLogoutRedirectUris = { "http://localhost:3000" },
-
-                        AllowedScopes = { "openid", "profile", "weatherapi.read" }
-                    },
-                })
-                .AddInMemoryIdentityResources(new List<IdentityResource>() {
-                    new IdentityResources.OpenId(),
-                    new IdentityResources.Profile()
+                .AddOperationalStore(options =>
+                {
+                    options.ConfigureDbContext = builder => builder.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
                 })
                 .AddTestUsers(new List<TestUser>() {
                     new TestUser
