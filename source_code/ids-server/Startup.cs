@@ -7,51 +7,40 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Test;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace idsserver
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
+
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            var connectStr = Configuration.GetConnectionString("DefaultConnection");
+            var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+
             services.AddIdentityServer()
-                .AddInMemoryApiScopes(new List<ApiScope> {
-                    new ApiScope("weatherapi.read", "Read Weather API"),
+                // add Configuration DB context 
+                // dotnet ef migrations add InitialIdsMigration -c PersistedGrantDbContext
+                .AddConfigurationStore(options =>
+                {
+                    options.ConfigureDbContext = builder => builder.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
                 })
-                .AddInMemoryApiResources(new List<ApiResource>() {
-                    new ApiResource("weatherapi") {
-                        Scopes = { "weatherapi.read" },
-                    }
-                })
-                .AddInMemoryClients(new List<Client> {
-                    new Client
-                    {
-                        ClientId = "m2m.client",
-                        AllowedGrantTypes = GrantTypes.ClientCredentials,
-                        ClientSecrets = { new Secret("SuperSecretPassword".Sha256())},
-                        AllowedScopes = { "weatherapi.read" }
-                    },
-                    new Client
-                    {
-                        ClientId = "interactive",
-            
-                        AllowedGrantTypes = GrantTypes.Code,
-                        RequireClientSecret = false,
-                        RequirePkce = true,
-            
-                        RedirectUris = { "http://localhost:3000/signin-oidc" },
-                        PostLogoutRedirectUris = { "http://localhost:3000" },
-            
-                        AllowedScopes = { "openid", "profile", "weatherapi.read" }
-                    },
-                })
-                .AddInMemoryIdentityResources(new List<IdentityResource>() {
-                    new IdentityResources.OpenId(),
-                    new IdentityResources.Profile()
+                .AddOperationalStore(options =>
+                {
+                    options.ConfigureDbContext = builder => builder.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
                 })
                 .AddTestUsers(new List<TestUser>() {
                     new TestUser
@@ -61,8 +50,8 @@ namespace idsserver
                             Password = "alice"
                         }
                 });
-            
-            
+
+
             // add views
             services.AddControllersWithViews();
 

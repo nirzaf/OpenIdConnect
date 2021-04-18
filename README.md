@@ -16,7 +16,8 @@ cd ids-server
 dotnet new web
 dotnet add package Duende.IdentityServer
 ```
-- add `services.AddIdentityServer()` 
+
+- add `services.AddIdentityServer()`
 
 ```csharp
 // startup.cs
@@ -52,9 +53,9 @@ dotnet new webapi
 ```
 
 - change `launchSettings.json` and update applicationUrl to `https://localhost:5002;http://localhost:5003`
-- run `dotnet watch run` and open `https://localhost:5002/WeatherForecast` to see the json weather data 
+- run `dotnet watch run` and open `https://localhost:5002/WeatherForecast` to see the json weather data
 
-## Step 3: protect weatherapi 
+## Step 3: protect weatherapi
 
 - add `services.AddAuthentication("Bearer")` and `app.UseAuthentication()` to startup.cs and `[Authorize]` on the `WeatherForecastController.cs`
 
@@ -69,7 +70,7 @@ services.AddAuthentication("Bearer")
       options.Audience = "weatherapi";
       options.Authority = "https://localhost:5001";
 
-      // ignore self-signed ssl 
+      // ignore self-signed ssl
       options.BackchannelHttpHandler = new HttpClientHandler { ServerCertificateCustomValidationCallback = delegate { return true; } };
   });
 
@@ -85,9 +86,10 @@ app.UseAuthorization();
 [ApiController]
 [Authorize]
 [Route("[controller]")]
-public class WeatherForecastController : ControllerBase 
+public class WeatherForecastController : ControllerBase
 
 ```
+
 - try open https://localhost:5002/WeatherForecast, you will get `401`
 
 - add clients, resource and scope in the `startup.cs` of the IdentityServer
@@ -124,17 +126,20 @@ Content-Type: application/x-www-form-urlencoded
 
 grant_type=client_credentials&scope=weatherapi.read&client_id=m2m.client&client_secret=SuperSecretPassword
 ```
+
 - use the token and call weatherapi (in Authorization header), you should now get data back
 
 ```curl
 GET https://localhost:5002/WeatherForecast
 Authorization: Bearer <TOKEN>
 ```
+
 ## Step 4: Add Quick start UI from Duende Quick start UI
+
 - in ids-server folder
 - run `curl -L https://raw.githubusercontent.com/DuendeSoftware/IdentityServer.Quickstart.UI/main/getmain.sh | bash` inside `ids-server`, this will download 3 new folders to the project: `QuickStart`,`Views` and `wwwroot`
-- add `services.AddControllersWithViews();` 
-- add `app.UseStaticFiles();` 
+- add `services.AddControllersWithViews();`
+- add `app.UseStaticFiles();`
 - add `app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());`
 
 ```csharp
@@ -147,11 +152,13 @@ services.AddControllersWithViews();
 app.UseStaticFiles();
 
 ...
-// after UseIdentityServer() >idsMapDefaultController 
+// after UseIdentityServer() >idsMapDefaultController
 app.UseAuthorization();
 app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
 ```
+
 - Add test user
+
 ```csharp
 
 // >idsAddTestUser
@@ -164,14 +171,15 @@ app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
         }
 });
 ```
+
 - open https://localhost:5001/account/login and login using `alice` and `alice`
 
 ## Step 5: Add React Interactive Client
 
-- in `ids-server` and `AddInMemoryIdentityResources()` and  add new client `.AddInMemoryClients()` 
+- in `ids-server` and `AddInMemoryIdentityResources()` and add new client `.AddInMemoryClients()`
 
 ```csharp
-// >idsAddInteractiveClient 
+// >idsAddInteractiveClient
 .AddInMemoryClients(new List<Client> {
     new Client
     {
@@ -215,7 +223,7 @@ app.UseCors(config => config
 app.UseRouting();
 ```
 
-- create new React app by running `npx create-react-app react-client` 
+- create new React app by running `npx create-react-app react-client`
 
 ```bash
 # from root
@@ -239,6 +247,7 @@ function App() {
   );
 }
 ```
+
 - in the same file add HomePage() component, this component will display `login` button if user is not logged in
 
 ```javascript
@@ -311,3 +320,68 @@ function Callback() {
 - login with `alice` and `alice`
 - you should be redirected back to the React app with your name and weather information
 - click `Logout`, you should be redirected back to the Identity Server, with a link to take you back to the React app
+
+## Step 6: Replace in memory provider with EntityFrameworkCore
+
+- now that we have Identity Server 5 working with React and a API client, let's see how we can replace the in memory provider with Entity framework (using Sqlite)
+- first, install the follow Nuget package into the Duende Identity Server
+
+```bash
+dotnet add package Microsoft.EntityFrameworkCore.Sqlite
+dotnet add package Microsoft.EntityFrameworkCore.Tools
+dotnet add package Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
+dotnet add package Duende.IdentityServer.EntityFramework
+```
+
+- now add a default connection string to the `appsettings.json` file
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=IdentityServer.db"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+  "AllowedHosts": "*"
+}
+```
+
+- now inject `IConfiguration` into startup.cs class of the IDS
+- remove InMemory providers with the following:
+
+```csharp
+var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+services.AddIdentityServer()
+  .AddConfigurationStore(options =>
+  {
+      options.ConfigureDbContext = builder => builder.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
+  })
+  .AddOperationalStore(options =>
+  {
+      options.ConfigureDbContext = builder => builder.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
+  })
+  .AddTestUsers(new List<TestUser>() {
+    new TestUser
+      {
+          SubjectId = "Alice",
+          Username = "alice",
+          Password = "alice"
+      }
+  });
+```
+
+- where `connectStr` is coming from `Configuration.GetConnectionString("DefaultConnection")`
+- then run `dotnet ef migrations add InitialIdsMigration -c PersistedGrantDbContext` to add Initial Migration
+- you will see the initial migration code for the database which is creating 3 tables
+- now run `dotnet ef database update -c PersistedGrantDbContext` to create the DB file 
+- now add the tables for the ConfigurationContext
+- then run `dotnet ef migrations add InitialIdsMigration -c ConfigurationDbContext` to add Initial Migration
+- now run `dotnet ef database update -c ConfigurationDbContext` to create the DB file 
+- open the sqlite DB (you can install the sqlite VSCode Extension to view the data), you should see all the tables it created
+- now run `dotnet run` again and open https://localhost:5001/.well-known/openid-configuration again
+- you should see it is empty again (no scopes, no clients)
