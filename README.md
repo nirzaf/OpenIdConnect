@@ -622,3 +622,19 @@ private static void SeedTestUsers(UserManager<IdentityUser> manager)
 ```
 
 - run `dotnet run` again and query the ASPNetUsers table to make sure you have the test user there
+
+## Step 10: Update Account controller to user ASP.NET Core Identity
+- update AccountController.cs and replace TestUsers with `SignInManager<IdentityUser> manager`
+- replace the logic for checking for username and password in the Login() method as follow
+
+```csharp
+var user = await manager.UserManager.FindByNameAsync(model.Username);
+// validate username/password against in-memory store
+if (user != null && await manager.CheckPasswordSignInAsync(user, model.Password, true) == Microsoft.AspNetCore.Identity.SignInResult.Success)
+{
+    .... codes ....
+}
+```
+
+- replace `user.SubjectId` with `user.Id` and `user.Username`  with `user.UserName`
+- run `dotnet run` again and navigate to http://localhost:5000/account/login and login using `alice` and `Password1!` as password
