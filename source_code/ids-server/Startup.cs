@@ -29,6 +29,7 @@ namespace idsserver
         public void ConfigureServices(IServiceCollection services)
         {
             var connectStr = Configuration.GetConnectionString("DefaultConnection");
+
             var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
 
             services.AddIdentityServer()
@@ -50,7 +51,6 @@ namespace idsserver
                             Password = "alice"
                         }
                 });
-
 
             // add views
             services.AddControllersWithViews();
