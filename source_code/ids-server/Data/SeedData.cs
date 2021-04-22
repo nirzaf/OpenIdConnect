@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Mappers;
 using Duende.IdentityServer.Models;
+using IdentityModel;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace idsserver
@@ -17,9 +20,44 @@ namespace idsserver
             var context = serviceProvider
                 .GetRequiredService<ConfigurationDbContext>();
 
+            var userMng = serviceProvider
+                .GetRequiredService<UserManager<IdentityUser>>();
+
             DataSeeder.SeedData(context);
+
+            DataSeeder.SeedTestUsers(userMng);
         }
 
+        private static void SeedTestUsers(UserManager<IdentityUser> manager)
+        {
+            var alice = manager.FindByNameAsync("alice").Result;
+            if (alice == null)
+            {
+                alice = new IdentityUser
+                {
+                    UserName = "alice",
+                    Email = "alice@test.com",
+                    EmailConfirmed = true
+                };
+                var result = manager.CreateAsync(alice, "Password1!").Result;
+
+                if (result.Succeeded)
+                {
+                    result = manager.AddClaimsAsync(alice, new Claim[] {
+                        new Claim(JwtClaimTypes.Name, "Alice Smith"),
+                        new Claim(JwtClaimTypes.GivenName, "Alice"),
+                        new Claim(JwtClaimTypes.FamilyName, "Smith"),
+                        new Claim(JwtClaimTypes.WebSite, "Website"),
+                    }).Result;
+
+                    Console.WriteLine("added alice user");
+                }
+            }
+            else
+            {
+                Console.WriteLine("alice already created");
+            }
+        }
         private static void SeedData(ConfigurationDbContext context)
         {
             if (!context.Clients.Any())

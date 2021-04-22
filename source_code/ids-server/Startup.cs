@@ -12,6 +12,7 @@ using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Test;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using Microsoft.AspNetCore.Identity;
 
 namespace idsserver
 {
@@ -32,6 +33,13 @@ namespace idsserver
 
             var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
 
+            services.AddDbContext<ApplicationDbContext>(options =>
+            {
+                options.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
+            });
+
+            services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+
             services.AddIdentityServer()
                 // add Configuration DB context 
                 // dotnet ef migrations add InitialIdsMigration -c PersistedGrantDbContext
@@ -43,14 +51,7 @@ namespace idsserver
                 {
                     options.ConfigureDbContext = builder => builder.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
                 })
-                .AddTestUsers(new List<TestUser>() {
-                    new TestUser
-                        {
-                            SubjectId = "Alice",
-                            Username = "alice",
-                            Password = "alice"
-                        }
-                });
+                .AddAspNetIdentity<IdentityUser>();
 
             // add views
             services.AddControllersWithViews();
@@ -79,7 +80,7 @@ namespace idsserver
             app.UseRouting();
             app.UseIdentityServer();
             app.UseAuthorization();
-            
+
             app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
         }
     }

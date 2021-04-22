@@ -542,3 +542,83 @@ public class DataSeeder
 
 - run `dotnet run` and open http://localhost:5000/.well-known/openid-configuration again
 - you should see the support_scopes now contains your newly added scopes above
+
+
+## Step 9: Use ASP.NET Core Identity instead of In memory test users
+- install the following nuget packages
+
+```bash
+dotnet add package Duende.IdentityServer.AspNetIdentity --version 5.1.0
+dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore --version 5.0.5
+```
+
+- in the `startup.cs` file, add the following before UseIdentityServer() method
+
+```csharp
+services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
+});
+
+services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+```
+
+- remove `.UseTestUsers()` and replace with `.AddAspNetIdentity<IdentityUser>();`
+- now run the migration to add the ASP.NET Core Identity tables to the database
+
+```bash
+dotnet ef migrations add InitialIdsMigration -c ApplicationDbContext
+dotnet ef database update -c ApplicationDbContext
+```
+
+- update `SeedData.cs` and add new method to seed the test users
+
+```csharp
+public static void SeedIdentityServer(IServiceProvider serviceProvider)
+{
+    Console.WriteLine("Seeding data for Identity server");
+
+    var context = serviceProvider
+        .GetRequiredService<ConfigurationDbContext>();
+
+    var userMng = serviceProvider
+        .GetRequiredService<UserManager<IdentityUser>>();
+
+    DataSeeder.SeedData(context);
+
+    DataSeeder.SeedTestUsers(userMng);
+}
+
+private static void SeedTestUsers(UserManager<IdentityUser> manager)
+{
+    var alice = manager.FindByNameAsync("alice").Result;
+    if (alice == null)
+    {
+        alice = new IdentityUser
+        {
+            UserName = "alice",
+            Email = "alice@test.com",
+            EmailConfirmed = true
+        };
+        var result = manager.CreateAsync(alice, "Password1!").Result;
+
+        if (result.Succeeded)
+        {
+            result = manager.AddClaimsAsync(alice, new Claim[] {
+                new Claim(JwtClaimTypes.Name, "Alice Smith"),
+                new Claim(JwtClaimTypes.GivenName, "Alice"),
+                new Claim(JwtClaimTypes.FamilyName, "Smith"),
+                new Claim(JwtClaimTypes.WebSite, "Website"),
+            }).Result;
+
+            Console.WriteLine("added alice user");
+        }
+    }
+    else
+    {
+        Console.WriteLine("alice already created");
+    }
+}
+```
+
+- run `dotnet run` again and query the ASPNetUsers table to make sure you have the test user there
