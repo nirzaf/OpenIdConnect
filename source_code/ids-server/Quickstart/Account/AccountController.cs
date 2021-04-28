@@ -10,13 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Duende.IdentityServer;
 using Duende.IdentityServer.Events;
 using Duende.IdentityServer.Extensions;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Stores;
-using Duende.IdentityServer.Test;
 using Microsoft.AspNetCore.Identity;
 
 namespace IdentityServerHost.Quickstart.UI
@@ -34,7 +32,7 @@ namespace IdentityServerHost.Quickstart.UI
         private readonly IClientStore _clientStore;
         private readonly IAuthenticationSchemeProvider _schemeProvider;
         private readonly IEventService _events;
-        private readonly SignInManager<IdentityUser> manager;
+        private readonly SignInManager<IdentityUser> _manager;
 
         public AccountController(
             IIdentityServerInteractionService interaction,
@@ -47,7 +45,7 @@ namespace IdentityServerHost.Quickstart.UI
             _clientStore = clientStore;
             _schemeProvider = schemeProvider;
             _events = events;
-            this.manager = manager;
+            _manager = manager;
         }
 
         /// <summary>
@@ -107,9 +105,9 @@ namespace IdentityServerHost.Quickstart.UI
 
             if (ModelState.IsValid)
             {
-                var user = await manager.UserManager.FindByNameAsync(model.Username);
+                var user = await _manager.UserManager.FindByNameAsync(model.Username);
                 // validate username/password against in-memory store
-                if (user != null && await manager.CheckPasswordSignInAsync(user, model.Password, true) == Microsoft.AspNetCore.Identity.SignInResult.Success)
+                if (user != null && await _manager.CheckPasswordSignInAsync(user, model.Password, true) == Microsoft.AspNetCore.Identity.SignInResult.Success)
                 {
                     await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
 
@@ -125,13 +123,7 @@ namespace IdentityServerHost.Quickstart.UI
                         };
                     };
 
-                    // issue authentication cookie with subject ID and username
-                    var isuser = new IdentityServerUser(user.Id)
-                    {
-                        DisplayName = user.UserName
-                    };
-
-                    await HttpContext.SignInAsync(isuser, props);
+                    await _manager.SignInAsync(user, props);
 
                     if (context != null)
                     {
@@ -204,7 +196,7 @@ namespace IdentityServerHost.Quickstart.UI
             if (User?.Identity.IsAuthenticated == true)
             {
                 // delete local authentication cookie
-                await HttpContext.SignOutAsync();
+                await _manager.SignOutAsync();
 
                 // raise the logout event
                 await _events.RaiseAsync(new UserLogoutSuccessEvent(User.GetSubjectId(), User.GetDisplayName()));

@@ -638,3 +638,13 @@ if (user != null && await manager.CheckPasswordSignInAsync(user, model.Password,
 
 - replace `user.SubjectId` with `user.Id` and `user.Username`  with `user.UserName`
 - run `dotnet run` again and navigate to http://localhost:5000/account/login and login using `alice` and `Password1!` as password
+
+
+## Step 11: Add 2FA to the solution
+- add the following packages by running the following
+
+```bash
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+dotnet add package Microsoft.AspNetCore.Identity.UI
+dotnet aspnet-codegenerator identity -dc idsserver.ApplicationDbContext --files "Account.Manage.EnableAuthenticator;Account.LoginWith2fa"
+```

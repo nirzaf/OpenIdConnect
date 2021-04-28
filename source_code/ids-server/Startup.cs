@@ -1,15 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
-using Duende.IdentityServer.Models;
-using Duende.IdentityServer.Test;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using Microsoft.AspNetCore.Identity;
@@ -38,7 +31,12 @@ namespace idsserver
                 options.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
             });
 
-            services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+            services.AddIdentity<IdentityUser, IdentityRole>(options =>
+            {
+                options.SignIn.RequireConfirmedAccount = false;
+                options.SignIn.RequireConfirmedEmail = false;
+                options.SignIn.RequireConfirmedPhoneNumber = false;
+            }).AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddIdentityServer()
                 // add Configuration DB context 
@@ -54,8 +52,12 @@ namespace idsserver
                 .AddAspNetIdentity<IdentityUser>();
 
             // add views
-            services.AddControllersWithViews();
+            var mvcBuilder = services.AddControllersWithViews();
 
+// auto rebuild the razor files
+#if DEBUG
+            mvcBuilder.AddRazorRuntimeCompilation();
+#endif
             // add CORS
             services.AddCors();
 
