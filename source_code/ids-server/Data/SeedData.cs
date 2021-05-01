@@ -78,7 +78,7 @@ namespace idsserver
                         RequireClientSecret = false,
                         RequirePkce = true,
 
-                        RedirectUris = { "http://localhost:3000/signin-oidc" },
+                        RedirectUris = { "https://oauth.pstmn.io/v1/callback" },
                         PostLogoutRedirectUris = { "http://localhost:3000" },
 
                         AllowedScopes = { "openid", "profile", "weatherapi.read" }
@@ -122,7 +122,7 @@ namespace idsserver
             {
                 var scopes = new List<ApiScope> {
                     new ApiScope("weatherapi.read", "Read Access to API"),
-                    new ApiScope("weatherapi.write", "Write Access to API")
+                    new ApiScope("weatherapi.write", "Write Access to API"),
                 };
 
                 foreach (var scope in scopes)
@@ -131,6 +131,27 @@ namespace idsserver
                 }
                 context.SaveChanges();
                 Console.WriteLine($"Added {scopes.Count()} api scopes");
+            }
+            else
+            {
+                Console.WriteLine("api scopes already added..");
+            }
+
+            if (!context.IdentityResources.Any())
+            {
+                var identityResources = new List<IdentityResource>
+                {
+                    new IdentityResources.OpenId(),
+                    new IdentityResources.Profile(),
+                    new IdentityResources.Email(),
+                };
+
+                foreach (var identity in identityResources)
+                {
+                    context.IdentityResources.Add(identity.ToEntity());
+                }
+                context.SaveChanges();
+                Console.WriteLine($"Added {identityResources.Count()} identity Resources");
             }
             else
             {

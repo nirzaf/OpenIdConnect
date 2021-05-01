@@ -20,6 +20,15 @@ namespace idsserver
 
             using (var serviceScope = host.Services.CreateScope())
             {
+                var appdbContext = serviceScope.ServiceProvider.GetService<ApplicationDbContext>();
+                appdbContext.Database.Migrate();
+
+                var persistentdbContext = serviceScope.ServiceProvider.GetService<PersistedGrantDbContext>();
+                persistentdbContext.Database.Migrate();
+
+                var configDbContext = serviceScope.ServiceProvider.GetService<ConfigurationDbContext>();
+                configDbContext.Database.Migrate();
+
                 var conf = serviceScope.ServiceProvider.GetService<IConfiguration>();
                 if (conf.GetValue("SeedData", true))
                     DataSeeder.SeedIdentityServer(serviceScope.ServiceProvider);
