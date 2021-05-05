@@ -72,11 +72,24 @@ namespace idsserver
                     },
                     new Client
                     {
-                        ClientId = "interactive",
+                        ClientId = "interactive.public",
 
                         AllowedGrantTypes = GrantTypes.Code,
+                        // this client is SPA, and therefore doesn't need client secret
                         RequireClientSecret = false,
-                        RequirePkce = true,
+
+                        RedirectUris = { "https://oauth.pstmn.io/v1/callback" },
+                        PostLogoutRedirectUris = { "http://localhost:3000" },
+
+                        AllowedScopes = { "openid", "profile", "weatherapi.read" }
+                    },
+                    new Client
+                    {
+                        // e.g. MVC apps (or any other client apps that can secure the client secret)
+                        ClientId = "interactive.private",
+
+                        AllowedGrantTypes = GrantTypes.Code,
+                        ClientSecrets = { new Secret("SuperSecretPassword".Sha256()) },
 
                         RedirectUris = { "https://oauth.pstmn.io/v1/callback" },
                         PostLogoutRedirectUris = { "http://localhost:3000" },

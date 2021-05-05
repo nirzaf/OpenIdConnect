@@ -734,3 +734,33 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
 - update `HomeController.cs` and comment out the Index() method
 - run `dotnet run` again and open https://localhost:5001, you should see the Angular Starting page now
 - navigate to https://localhost:5001/account/login and you should see the QuickStart UI for the IdentityServer
+
+
+## Step 12: Add required Angular login pages
+- add 4 components to the angular app: Home, Login, Logout, MFA, LoggedOut and NotFound
+- add 4 routes to `app-routing.module.ts`
+
+```typescript
+const routes: Routes = [
+  { path: '', component: LoginComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'logout', component: LogoutComponent },
+  { path: 'loggedout', component: LoggedoutComponent },
+  { path: 'mfa', component: MfaComponent },
+  { path: 'home', component: HomeComponent },
+  { path: '**', component: NotFoundComponent },
+];
+```
+
+- add tailwind by running `npx ng add @ngneat/tailwind`
+- go to https://tailwindcomponents.com/ and search for the templates you want to use and paste into each angular component
+- edit `startup.cs` and add this option to the .AddIdentityServer() method
+
+```csharp
+services.AddIdentityServer(options =>
+{
+    // login page is now on the Angular SPA
+    options.UserInteraction.LoginUrl = "~/";
+})
+```
+- use postman and trigger Authorization Code flow and make sure you can see login screen in Angular

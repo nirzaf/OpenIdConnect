@@ -39,7 +39,11 @@ namespace idsserver
                 options.SignIn.RequireConfirmedPhoneNumber = false;
             }).AddEntityFrameworkStores<ApplicationDbContext>();
 
-            services.AddIdentityServer()
+            services.AddIdentityServer(options =>
+            {
+                // login page is now on the Angular SPA
+                options.UserInteraction.LoginUrl = "~/";
+            })
                 // add Configuration DB context 
                 // dotnet ef migrations add InitialIdsMigration -c PersistedGrantDbContext
                 .AddConfigurationStore(options =>
@@ -55,7 +59,7 @@ namespace idsserver
             // add views
             var mvcBuilder = services.AddControllersWithViews();
 
-// auto rebuild the razor files
+            // auto rebuild the razor files
 #if DEBUG
             mvcBuilder.AddRazorRuntimeCompilation();
 #endif
