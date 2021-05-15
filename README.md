@@ -390,7 +390,7 @@ services.AddIdentityServer()
 
 ## Step 7: Setup data seeder class
 
-- add new file `.\Data\SeedData.cs` like this
+-   add new file `.\Data\SeedData.cs` like this
 
 ```csharp
 public class DataSeeder
@@ -402,7 +402,7 @@ public class DataSeeder
 }
 ```
 
-- modify program.cs file like this
+-   modify program.cs file like this
 
 ```csharp
 public static void Main(string[] args)
@@ -420,30 +420,30 @@ public static void Main(string[] args)
 }
 ```
 
-- add new config in appsettings.json file
+-   add new config in appsettings.json file
 
 ```json
 {
-  "ConnectionStrings": {
-    "DefaultConnection": "Data Source=IdentityServer.db"
-  },
-  "SeedData": true,
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft": "Warning",
-      "Microsoft.Hosting.Lifetime": "Information"
-    }
-  },
-  "AllowedHosts": "*"
+	"ConnectionStrings": {
+		"DefaultConnection": "Data Source=IdentityServer.db"
+	},
+	"SeedData": true,
+	"Logging": {
+		"LogLevel": {
+			"Default": "Information",
+			"Microsoft": "Warning",
+			"Microsoft.Hosting.Lifetime": "Information"
+		}
+	},
+	"AllowedHosts": "*"
 }
 ```
 
-- run `dotnet run` and make sure you can see the console log saying "Seeding data for Identity server" 
+-   run `dotnet run` and make sure you can see the console log saying "Seeding data for Identity server"
 
 ## Step 8: Add seed data to Identity Server
 
-- add the following code to the `SeedData.cs` file
+-   add the following code to the `SeedData.cs` file
 
 ```csharp
 public class DataSeeder
@@ -540,19 +540,19 @@ public class DataSeeder
     }
 ```
 
-- run `dotnet run` and open http://localhost:5000/.well-known/openid-configuration again
-- you should see the support_scopes now contains your newly added scopes above
-
+-   run `dotnet run` and open http://localhost:5000/.well-known/openid-configuration again
+-   you should see the support_scopes now contains your newly added scopes above
 
 ## Step 9: Use ASP.NET Core Identity instead of In memory test users
-- install the following nuget packages
+
+-   install the following nuget packages
 
 ```bash
 dotnet add package Duende.IdentityServer.AspNetIdentity --version 5.1.0
 dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore --version 5.0.5
 ```
 
-- in the `startup.cs` file, add the following before UseIdentityServer() method
+-   in the `startup.cs` file, add the following before UseIdentityServer() method
 
 ```csharp
 services.AddDbContext<ApplicationDbContext>(options =>
@@ -563,15 +563,15 @@ services.AddDbContext<ApplicationDbContext>(options =>
 services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 ```
 
-- remove `.UseTestUsers()` and replace with `.AddAspNetIdentity<IdentityUser>();`
-- now run the migration to add the ASP.NET Core Identity tables to the database
+-   remove `.UseTestUsers()` and replace with `.AddAspNetIdentity<IdentityUser>();`
+-   now run the migration to add the ASP.NET Core Identity tables to the database
 
 ```bash
 dotnet ef migrations add InitialIdsMigration -c ApplicationDbContext
 dotnet ef database update -c ApplicationDbContext
 ```
 
-- update `SeedData.cs` and add new method to seed the test users
+-   update `SeedData.cs` and add new method to seed the test users
 
 ```csharp
 public static void SeedIdentityServer(IServiceProvider serviceProvider)
@@ -600,7 +600,7 @@ private static void SeedTestUsers(UserManager<IdentityUser> manager)
             Email = "alice@test.com",
             EmailConfirmed = true
         };
-        var result = manager.CreateAsync(alice, "Password1!").Result;
+        var result = manager.CreateAsync(alice, "alice").Result;
 
         if (result.Succeeded)
         {
@@ -621,11 +621,12 @@ private static void SeedTestUsers(UserManager<IdentityUser> manager)
 }
 ```
 
-- run `dotnet run` again and query the ASPNetUsers table to make sure you have the test user there
+-   run `dotnet run` again and query the ASPNetUsers table to make sure you have the test user there
 
 ## Step 10: Update Account controller to user ASP.NET Core Identity
-- update AccountController.cs and replace TestUsers with `SignInManager<IdentityUser> manager`
-- replace the logic for checking for username and password in the Login() method as follow
+
+-   update AccountController.cs and replace TestUsers with `SignInManager<IdentityUser> manager`
+-   replace the logic for checking for username and password in the Login() method as follow
 
 ```csharp
 var user = await manager.UserManager.FindByNameAsync(model.Username);
@@ -636,14 +637,14 @@ if (user != null && await manager.CheckPasswordSignInAsync(user, model.Password,
 }
 ```
 
-- replace `user.SubjectId` with `user.Id` and `user.Username`  with `user.UserName`
-- run `dotnet run` again and navigate to http://localhost:5000/account/login and login using `alice` and `Password1!` as password
-
+-   replace `user.SubjectId` with `user.Id` and `user.Username` with `user.UserName`
+-   run `dotnet run` again and navigate to http://localhost:5000/account/login and login using `alice` and `alice` as password
 
 ## Step 11: Add Angular login UIs (instead of using QuickStart UI)
-- run `npx ng new ClientApp` and turn on routing and scss support
-- add nuget package `Microsoft.AspNetCore.SpaServices.Extensions` to the idsserver
-- modify the `idsserver.csproj` and add the following 
+
+-   run `npx ng new ClientApp` and turn on routing and scss support
+-   add nuget package `Microsoft.AspNetCore.SpaServices.Extensions` to the idsserver
+-   modify the `idsserver.csproj` and add the following
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk.Web">
@@ -702,7 +703,9 @@ if (user != null && await manager.CheckPasswordSignInAsync(user, model.Password,
   </Target>
 </Project>
 ```
-- modify `startup.cs` file as follow
+
+-   modify `startup.cs` file as follow
+
 ```csharp
 public void ConfigureServices(IServiceCollection services) {
     // current codes
@@ -731,30 +734,31 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
     });
 }
 ```
-- update `HomeController.cs` and comment out the Index() method
-- run `dotnet run` again and open https://localhost:5001, you should see the Angular Starting page now
-- navigate to https://localhost:5001/account/login and you should see the QuickStart UI for the IdentityServer
 
+-   update `HomeController.cs` and comment out the Index() method
+-   run `dotnet run` again and open https://localhost:5001, you should see the Angular Starting page now
+-   navigate to https://localhost:5001/account/login and you should see the QuickStart UI for the IdentityServer
 
 ## Step 12: Add required Angular login pages
-- add 4 components to the angular app: Home, Login, Logout, MFA, LoggedOut and NotFound
-- add 4 routes to `app-routing.module.ts`
+
+-   add 4 components to the angular app: Home, Login, Logout, MFA, LoggedOut and NotFound
+-   add 4 routes to `app-routing.module.ts`
 
 ```typescript
 const routes: Routes = [
-  { path: '', component: LoginComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'logout', component: LogoutComponent },
-  { path: 'loggedout', component: LoggedoutComponent },
-  { path: 'mfa', component: MfaComponent },
-  { path: 'home', component: HomeComponent },
-  { path: '**', component: NotFoundComponent },
+	{ path: "", component: LoginComponent },
+	{ path: "login", component: LoginComponent },
+	{ path: "logout", component: LogoutComponent },
+	{ path: "loggedout", component: LoggedoutComponent },
+	{ path: "mfa", component: MfaComponent },
+	{ path: "home", component: HomeComponent },
+	{ path: "**", component: NotFoundComponent },
 ];
 ```
 
-- add tailwind by running `npx ng add @ngneat/tailwind`
-- go to https://tailwindcomponents.com/ and search for the templates you want to use and paste into each angular component
-- edit `startup.cs` and add this option to the .AddIdentityServer() method
+-   add tailwind by running `npx ng add @ngneat/tailwind`
+-   go to https://tailwindcomponents.com/ and search for the templates you want to use and paste into each angular component
+-   edit `startup.cs` and add this option to the .AddIdentityServer() method
 
 ```csharp
 services.AddIdentityServer(options =>
@@ -763,4 +767,199 @@ services.AddIdentityServer(options =>
     options.UserInteraction.LoginUrl = "~/";
 })
 ```
-- use postman and trigger Authorization Code flow and make sure you can see login screen in Angular
+
+-   use postman and trigger Authorization Code flow and make sure you can see login screen in Angular
+
+## Step 13: Add login API and hook up Angular code
+
+-   add the following to `login.component.ts` file
+
+```typescript
+import { HttpClient } from "@angular/common/http";
+import { Component, OnInit } from "@angular/core";
+import { ActivatedRoute } from "@angular/router";
+
+@Component({
+	selector: "app-login",
+	templateUrl: "./login.component.html",
+	styleUrls: ["./login.component.scss"],
+})
+export class LoginComponent implements OnInit {
+	username: string;
+	password: string;
+	returnUrl: string;
+	error: string;
+
+	constructor(private http: HttpClient, private router: ActivatedRoute) {}
+
+	ngOnInit(): void {
+		this.returnUrl = this.router.snapshot.queryParams["ReturnUrl"];
+	}
+
+	login() {
+		this.error = "";
+		this.http
+			.post("/auth/login", {
+				username: this.username,
+				password: this.password,
+				rememberLogin: false,
+				returnUrl: this.returnUrl,
+			})
+			.subscribe(
+				(rsp) => {
+					window.location.href = (rsp as any).returnUrl;
+				},
+				(_) => {
+					this.error = `Login failed!`;
+				}
+			);
+	}
+}
+```
+
+-   add the following to the import array of the `app.module.ts` file
+
+```typescript
+// app.module.ts
+imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule,
+    HttpClientModule
+  ],
+```
+
+-   use 2ways binding to username, password input field
+-   call `login()` method when form is submitted
+
+```html
+<form (ngSubmit)="login()">
+	<input [(ngModel)]="username" ... />
+	<input [(ngModel)]="password" ... />
+	<button type="submit" .. />
+</form>
+```
+
+-   add new folder called `Controllers` and add new file called `AuthController.cs`
+-   copy the codes from AccountController.cs and modify as follow:
+
+```csharp
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Duende.IdentityServer.Events;
+using Duende.IdentityServer.Services;
+using Duende.IdentityServer.Stores;
+using Microsoft.AspNetCore.Identity;
+using IdentityServerHost.Quickstart.UI;
+
+namespace idsserver
+{
+    [AllowAnonymous]
+    public class AuthController : Controller
+    {
+        private readonly IIdentityServerInteractionService _interaction;
+        private readonly IClientStore _clientStore;
+        private readonly IAuthenticationSchemeProvider _schemeProvider;
+        private readonly IEventService _events;
+        private readonly SignInManager<IdentityUser> _manager;
+
+        public AuthController(
+            IIdentityServerInteractionService interaction,
+            IClientStore clientStore,
+            IAuthenticationSchemeProvider schemeProvider,
+            IEventService events,
+            SignInManager<IdentityUser> manager)
+        {
+            _interaction = interaction;
+            _clientStore = clientStore;
+            _schemeProvider = schemeProvider;
+            _events = events;
+            _manager = manager;
+        }
+
+        /// <summary>
+        /// Handle postback from username/password login
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> Login([FromBody] LoginInputModel model)
+        {
+            var context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
+
+            if (string.IsNullOrEmpty(model?.Username) || string.IsNullOrEmpty(model?.Password))
+                return BadRequest("invalid request payload");
+
+            var user = await _manager.UserManager.FindByNameAsync(model.Username);
+
+            if (user != null && await _manager.CheckPasswordSignInAsync(user, model.Password, true) == Microsoft.AspNetCore.Identity.SignInResult.Success)
+            {
+                await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
+
+                // only set explicit expiration here if user chooses "remember me". 
+                // otherwise we rely upon expiration configured in cookie middleware.
+                AuthenticationProperties props = null;
+                if (AccountOptions.AllowRememberLogin && model.RememberLogin)
+                {
+                    props = new AuthenticationProperties
+                    {
+                        IsPersistent = true,
+                        ExpiresUtc = DateTimeOffset.UtcNow.Add(AccountOptions.RememberMeLoginDuration)
+                    };
+                };
+
+                await _manager.SignInAsync(user, props);
+
+                if (context != null)
+                {
+                    if (context.IsNativeClient())
+                    {
+                        // The client is native, so this change in how to
+                        // return the response is for better UX for the end user.
+                        return Ok(new
+                        {
+                            ReturnUrl = model.ReturnUrl
+                        });
+                    }
+
+                    // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
+                    return Ok(new
+                    {
+                        ReturnUrl = model.ReturnUrl
+                    });
+                }
+
+                // request for a local page
+                if (Url.IsLocalUrl(model.ReturnUrl))
+                {
+                    return Ok(new
+                    {
+                        ReturnUrl = model.ReturnUrl
+                    });
+                }
+                else if (string.IsNullOrEmpty(model.ReturnUrl))
+                {
+                    return Ok(new
+                    {
+                        ReturnUrl = "/"
+                    });
+                }
+                else
+                {
+                    // user might have clicked on a malicious link - should be logged
+                    return BadRequest("invalid return URL");
+                }
+            }
+
+            await _events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials", clientId: context?.Client.ClientId));
+            ModelState.AddModelError(string.Empty, AccountOptions.InvalidCredentialsErrorMessage);
+            return BadRequest("Something went wrong");
+        }
+    }
+}
+```
+
+- use Postman and test the login flow (using Authorization Code flow with PKCE)
+- login using `alice` and `alice` => you should be able to get access token in Postman

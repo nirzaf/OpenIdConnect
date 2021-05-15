@@ -1,4 +1,5 @@
-import { NgModule } from '@angular/core';
+import { NgModule,  } from '@angular/core';
+import { HttpClientModule  } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -9,6 +10,7 @@ import { LogoutComponent } from './logout/logout.component';
 import { HomeComponent } from './home/home.component';
 import { MfaComponent } from './mfa/mfa.component';
 import { LoggedoutComponent } from './loggedout/loggedout.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -22,7 +24,9 @@ import { LoggedoutComponent } from './loggedout/loggedout.component';
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    FormsModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]

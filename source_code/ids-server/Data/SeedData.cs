@@ -37,9 +37,9 @@ namespace idsserver
                 {
                     UserName = "alice",
                     Email = "alice@test.com",
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
                 };
-                var result = manager.CreateAsync(alice, "Password1!").Result;
+                var result = manager.CreateAsync(alice, "alice").Result;
 
                 if (result.Succeeded)
                 {
