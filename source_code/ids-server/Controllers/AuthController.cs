@@ -97,7 +97,8 @@ namespace idsserver
                 {
                     return Ok(new
                     {
-                        ReturnUrl = "/"
+                        // when user navigate directly to Identity Server, we just take them to home after login
+                        ReturnUrl = "/home"
                     });
                 }
                 else
