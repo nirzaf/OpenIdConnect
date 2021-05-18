@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -13,7 +13,11 @@ export class LoginComponent implements OnInit {
   returnUrl: string;
   error: string;
 
-  constructor(private http: HttpClient, private router: ActivatedRoute) {}
+  constructor(
+    private http: HttpClient,
+    private router: ActivatedRoute,
+    private route: Router
+  ) {}
 
   ngOnInit(): void {
     this.returnUrl = this.router.snapshot.queryParams['ReturnUrl'];
@@ -32,8 +36,20 @@ export class LoginComponent implements OnInit {
         (rsp) => {
           window.location.href = (rsp as any).returnUrl;
         },
-        (_) => {
-          this.error = `Login failed!`;
+        (error) => {
+          if (error.status === 401) {
+            if (error.error?.require2fa) {
+              this.route.navigate(['/mfa'], {
+                queryParams: {
+                  ReturnUrl: error.error.returnUrl,
+                  RememberMe: error.error.rememberMe,
+                },
+              });
+            }
+          } else {
+            console.log('error', error);
+            this.error = `Login failed!`;
+          }
         }
       );
   }

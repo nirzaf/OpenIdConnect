@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
+using System.Text.Encodings.Web;
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Mappers;
 using Duende.IdentityServer.Models;
@@ -13,6 +15,7 @@ namespace idsserver
 {
     public class DataSeeder
     {
+        private const string AuthenticatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
         public static void SeedIdentityServer(IServiceProvider serviceProvider)
         {
             Console.WriteLine("Seeding data for Identity server");
@@ -56,6 +59,58 @@ namespace idsserver
             else
             {
                 Console.WriteLine("alice already created");
+            }
+
+            // bob need 2FA
+            var bob = manager.FindByNameAsync("bob").Result;
+            if (bob == null)
+            {
+                bob = new IdentityUser
+                {
+                    UserName = "bob",
+                    Email = "bob@test.com",
+                    EmailConfirmed = true,
+                };
+                var result = manager.CreateAsync(bob, "bob").Result;
+
+                if (result.Succeeded)
+                {
+                    result = manager.AddClaimsAsync(bob, new Claim[] {
+                        new Claim(JwtClaimTypes.Name, "bob Smith"),
+                        new Claim(JwtClaimTypes.GivenName, "bob"),
+                        new Claim(JwtClaimTypes.FamilyName, "Smith"),
+                        new Claim(JwtClaimTypes.WebSite, "Website"),
+                    }).Result;
+
+                    Console.WriteLine("added bob user");
+
+                    var t = manager.ResetAuthenticatorKeyAsync(bob).Result;
+                    var unformattedKey = manager.GetAuthenticatorKeyAsync(bob).Result;
+
+                    var sharedKey = HelperClass.FormatKey(unformattedKey);
+
+                    var email = manager.GetEmailAsync(bob).Result;
+
+                    var authenticatorUri = HelperClass.GenerateQrCodeUri(email, unformattedKey);
+
+                    t = manager.SetTwoFactorEnabledAsync(bob, enabled: true).Result;
+
+                    Console.WriteLine("Enabled 2FA with Authenticator URL: " + authenticatorUri);
+                }
+            }
+            else
+            {
+                var unformattedKey = manager.GetAuthenticatorKeyAsync(bob).Result;
+                var isEnabled = manager.GetTwoFactorEnabledAsync(bob).Result;
+
+                var sharedKey = HelperClass.FormatKey(unformattedKey);
+
+                var email = manager.GetEmailAsync(bob).Result;
+
+                var authenticatorUri = HelperClass.GenerateQrCodeUri(email, unformattedKey);
+
+                Console.WriteLine("bob already created");
+                Console.WriteLine($"2FA enabled = {isEnabled}, with Authenticator URL: " + authenticatorUri);
             }
         }
         private static void SeedData(ConfigurationDbContext context)
@@ -171,5 +226,6 @@ namespace idsserver
                 Console.WriteLine("api scopes already added..");
             }
         }
+ 
     }
 }
