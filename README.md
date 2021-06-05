@@ -57,6 +57,12 @@ dotnet new webapi
 
 ## Step 3: protect weatherapi
 
+-   Add the Jwt Bearer package
+
+```bash
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
+```
+
 -   add `services.AddAuthentication("Bearer")` and `app.UseAuthentication()` to startup.cs and `[Authorize]` on the `WeatherForecastController.cs`
 
 ```csharp
@@ -157,7 +163,7 @@ app.UseAuthorization();
 app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
 ```
 
--   Add test user
+-   Add test user to the end of services.AddIdentityServer()
 
 ```csharp
 
@@ -231,6 +237,14 @@ npx create-react-app react-client
 cd react-client
 npm i oidc-client react-router-dom
 ```
+-   import the required components and libraries for the changes we are going to make to App.js
+
+```jsx
+// App.js >idsImportComponentsAndLibraries
+import React, { useState, useEffect } from "react";
+import { BrowserRouter, Switch, Route } from "react-router-dom";
+import { UserManager } from "oidc-client";
+```
 
 -   replace content of `App()` function with the following
 
@@ -259,7 +273,7 @@ const IDENTITY_CONFIG = {
 	redirect_uri: "http://localhost:3000/signin-oidc",
 	post_logout_redirect_uri: "http://localhost:3000",
 	response_type: "code",
-	scope: "openid weatherapi",
+	scope: "openid profile weatherapi.read",
 };
 
 function HomePage() {
@@ -318,6 +332,7 @@ function Callback() {
 }
 ```
 
+-   run `npm start`
 -   open http://localhost:3000, click on `Login` button
 -   login with `alice` and `alice`
 -   you should be redirected back to the React app with your name and weather information
@@ -352,12 +367,36 @@ dotnet add package Duende.IdentityServer.EntityFramework
 	"AllowedHosts": "*"
 }
 ```
-
--   now inject `IConfiguration` into startup.cs class of the IDS
--   remove InMemory providers with the following:
+-   Add the required dependency using statements to startup.cs
 
 ```csharp
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
+using Microsoft.Extensions.Configuration;
+```
+
+-   now inject `IConfiguration` into startup.cs class of the IDS
+
+```csharp
+public IConfiguration Configuration { get; }
+
+public Startup(IConfiguration configuration)
+{
+	Configuration = configuration;
+}
+```
+
+-Add the connection string and migration assembly to ConfigureServices()
+
+```csharp
+var connectStr = Configuration.GetConnectionString("DefaultConnection");
+
 var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+```
+
+-   replace the InMemory providers on the services.AddIdentityServer() command with the following:
+
+```csharp
 services.AddIdentityServer()
   .AddConfigurationStore(options =>
   {
@@ -378,6 +417,8 @@ services.AddIdentityServer()
 ```
 
 -   where `connectStr` is coming from `Configuration.GetConnectionString("DefaultConnection")`
+-   Stop running the ids-server application
+-   If you do not have it already then install the Entity Framework Core tools CLI at https://docs.microsoft.com/en-us/ef/core/cli/dotnet
 -   then run `dotnet ef migrations add InitialIdsMigration -c PersistedGrantDbContext` to add Initial Migration
 -   you will see the initial migration code for the database which is creating 3 tables
 -   now run `dotnet ef database update -c PersistedGrantDbContext` to create the DB file
@@ -388,11 +429,13 @@ services.AddIdentityServer()
 -   now run `dotnet run` again and open https://localhost:5001/.well-known/openid-configuration again
 -   you should see it is empty again (no scopes, no clients)
 
-## Step 7: Setup data seeder class
+## Step 7: Setup data seeder class in the ids-server project
 
 -   add new file `.\Data\SeedData.cs` like this
 
 ```csharp
+using System;
+
 public class DataSeeder
 {
     public static void SeedIdentityServer(IServiceProvider serviceProvider)
@@ -402,7 +445,14 @@ public class DataSeeder
 }
 ```
 
--   modify program.cs file like this
+-add dependency using statements to program.cs
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+```
+
+- modify the main method of program.cs like this
 
 ```csharp
 public static void Main(string[] args)
@@ -552,7 +602,21 @@ dotnet add package Duende.IdentityServer.AspNetIdentity --version 5.1.0
 dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore --version 5.0.5
 ```
 
--   in the `startup.cs` file, add the following before UseIdentityServer() method
+- add new file `.\Data\ApplicationDbContext.cs` like this
+
+```csharp
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+
+public class ApplicationDbContext : IdentityDbContext
+{
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        {
+	}
+}
+```
+
+- in the `startup.cs` file, add the following before the .AddIdentityServer() method
 
 ```csharp
 services.AddDbContext<ApplicationDbContext>(options =>
@@ -571,9 +635,19 @@ dotnet ef migrations add InitialIdsMigration -c ApplicationDbContext
 dotnet ef database update -c ApplicationDbContext
 ```
 
--   update `SeedData.cs` and add new method to seed the test users
+- add using statements to `SeedData.cs` 
 
 ```csharp
+using IdentityModel;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
+```
+
+- Modify the `SeedData.cs` SeedIdentityServer method to look this this
+
+```csharp
+using 
+
 public static void SeedIdentityServer(IServiceProvider serviceProvider)
 {
     Console.WriteLine("Seeding data for Identity server");
@@ -588,7 +662,11 @@ public static void SeedIdentityServer(IServiceProvider serviceProvider)
 
     DataSeeder.SeedTestUsers(userMng);
 }
+```
 
+- Modify `SeedData.cs` by adding a new method to seed the test users
+
+```csharp
 private static void SeedTestUsers(UserManager<IdentityUser> manager)
 {
     var alice = manager.FindByNameAsync("alice").Result;
@@ -625,15 +703,22 @@ private static void SeedTestUsers(UserManager<IdentityUser> manager)
 
 ## Step 10: Update Account controller to user ASP.NET Core Identity
 
--   update AccountController.cs and replace TestUsers with `SignInManager<IdentityUser> manager`
--   replace the logic for checking for username and password in the Login() method as follow
+- add using statements to `AccountController.cs` 
+
+```csharp
+using Microsoft.AspNetCore.Identity;
+```
+
+- update AccountController.cs and replace `private readonly TestUserStore _users;` with `private readonly SignInManager<IdentityUser> manager;` then update the constructor accordingly.
+- replace the logic for checking for username and password in the `public async Task<IActionResult> Login(LoginInputModel model, string button)` method as follow
 
 ```csharp
 var user = await manager.UserManager.FindByNameAsync(model.Username);
 // validate username/password against in-memory store
 if (user != null && await manager.CheckPasswordSignInAsync(user, model.Password, true) == Microsoft.AspNetCore.Identity.SignInResult.Success)
 {
-    .... codes ....
+	await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
+    	.... code ....
 }
 ```
 
