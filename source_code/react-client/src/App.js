@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 import { UserManager } from "oidc-client";
-import { WeatherAPI } from "./api";
+import { WeatherAPI } from "./weatherapi.service";
 
 // 1. add 2 routes
 function App() {

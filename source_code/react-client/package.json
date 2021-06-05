@@ -17,7 +17,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "test:pact": "cross-env CI=true react-scripts test --runInBand --setupFiles ./pact/setup.js --setupTestFrameworkScriptFile ./pact/jest-wrapper.js --testMatch \"**/*.test.pact.js\""
   },
   "eslintConfig": {
     "extends": [
