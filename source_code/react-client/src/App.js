@@ -20,7 +20,7 @@ function HomePage() {
   const [state, setState] = useState(null);
   var mgr = new UserManager({
     authority: "https://localhost:5001",
-    client_id: "interactive",
+    client_id: "interactive.public",
     redirect_uri: "http://localhost:3000/signin-oidc",
     post_logout_redirect_uri: "http://localhost:3000",
     response_type: "code",

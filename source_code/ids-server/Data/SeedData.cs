@@ -133,7 +133,7 @@ namespace idsserver
                         // this client is SPA, and therefore doesn't need client secret
                         RequireClientSecret = false,
 
-                        RedirectUris = { "https://oauth.pstmn.io/v1/callback" },
+                        RedirectUris = { "https://oauth.pstmn.io/v1/callback", "http://localhost:3000/signin-oidc" },
                         PostLogoutRedirectUris = { "http://localhost:3000" },
 
                         AllowedScopes = { "openid", "profile", "weatherapi.read" }
