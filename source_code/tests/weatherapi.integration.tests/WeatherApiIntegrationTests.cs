@@ -17,6 +17,7 @@ namespace weatherapi.integration.tests
         [Theory]
         [InlineData("/", "NotFound")]
         [InlineData("/weatherforecast", "Unauthorized")]
+        [InlineData("/swagger/v1/swagger.json", "OK")]
         public async Task Get_EndpointsWithCorrectResponseCodes(string url, string responseCode)
         {
             // Arrange

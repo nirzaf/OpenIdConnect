@@ -32,6 +32,7 @@ public class WeatherForecastTests
 # Integration Test
 
 -   https://docs.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-5.0
+-   https://github.com/dotnet/AspNetCore.Docs/tree/main/aspnetcore/test/integration-tests/samples/3.x/IntegrationTestsSample
 -   Integration tests ensure that an app's components function correctly at a level that includes the app's supporting infrastructure, such as the database, file system, and network. ASP.NET Core supports integration tests using a unit test framework with a test web host and an in-memory test server.
 -   using `WebApplicationFactory` from `Microsoft.AspNetCore.Mvc.Testing`, you can have a integration test like this
 
