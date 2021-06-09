@@ -1,4 +1,5 @@
 import { pactWith } from "jest-pact";
+import { Matchers } from "@pact-foundation/pact";
 import { WeatherAPI } from "./weatherapi.service";
 const path = require("path");
 
@@ -32,15 +33,18 @@ pactWith(
 					},
 					willRespondWith: {
 						headers: {
-							"Content-Type": "application/json",
+							"Content-Type": "application/json; charset=utf-8",
 						},
-						body: [
-							{
-								temperatureC: 3,
-								temperatureF: 30,
-								message: "sample",
-							},
-						],
+						// https://github.com/pact-foundation/pact-js#match-based-on-type
+						// we can match exact or base on shape
+						body: Matchers.eachLike({
+							temperatureC: 3,
+							temperatureF: 30,
+							summary: "hot",
+							// area: "CA",
+							// country: "CA",
+							// state: "CA",
+						}),
 						status: 200,
 					},
 				};
@@ -50,7 +54,7 @@ pactWith(
 					expect(result.length).toEqual(1);
 					expect(result[0].temperatureC).toEqual(3);
 					expect(result[0].temperatureF).toEqual(30);
-					expect(result[0].message).toEqual("sample");
+					expect(result[0].summary).toEqual("hot");
 				});
 			});
 		});

@@ -17,3 +17,19 @@ Content-Type: application/json
 {
   "code": "125570"
 }
+
+###
+GET https://localhost:5002/weatherforecast
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJwYWN0dGVzdCIsImlhdCI6MTYyMjk1ODIxMSwiZXhwIjoxNzQ5MTg4NjExLCJhdWQiOiJ3ZWF0aGVyYXBpIiwic3ViIjoidGVzdCJ9.YdjgDJClh1dsDRFPKOpdDF_C6hXJSV_AEYONVopjnhA
+
+###
+GET https://ssw.pactflow.io/pacts/provider/WeatherAPI/for-verification 
+Authorization: Bearer xRy0RdbaDE1oSvyxEfuT6Q
+
+{
+	"includePendingStatus": true,
+	"consumerVersionSelectors": [
+		
+	],
+	"providerVersionTags": []
+}

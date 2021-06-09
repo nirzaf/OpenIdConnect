@@ -1,17 +1,16 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using weatherapi.Controllers;
 
 namespace weatherapi
 {
@@ -32,13 +31,28 @@ namespace weatherapi
                 .AddJwtBearer("Bearer", options =>
                 {
                     options.Audience = "weatherapi";
-                    options.Authority = "https://localhost:5001";
+                    var issuer = Configuration.GetValue<string>("IDSServer");
 
-                    // ignore self-signed ssl 
-                    options.BackchannelHttpHandler = new HttpClientHandler { ServerCertificateCustomValidationCallback = delegate { return true; } };
+                    if (issuer.StartsWith("http"))
+                        options.Authority = issuer; // Issued by identity server
+                    else
+                    {
+                        // this is self issued
+                        var signKey = Configuration.GetValue<string>("IssuerSigningKey");
+
+                        options.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signKey)),
+                            ValidateIssuer = true,
+                            ValidIssuer = issuer,
+                        };
+                    }
                 });
 
-            services.AddControllers();
+            services.AddControllers()
+                // see https://github.com/ddubson/contract-testing-dotnetcore-example#-gotchas
+                .AddApplicationPart(typeof(WeatherForecastController).Assembly);
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "weatherapi", Version = "v1" });
@@ -49,7 +63,7 @@ namespace weatherapi
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public virtual void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
