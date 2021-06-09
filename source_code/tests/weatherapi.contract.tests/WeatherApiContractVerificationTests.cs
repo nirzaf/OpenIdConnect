@@ -25,7 +25,7 @@ namespace API.Tests
                 // point to the contract file
                 // not this is coming from bin folder of .net 
 
-                // .PactUri($"..\\..\\..\\..\\pacts\\react-client-weatherapi.json")
+                // .PactUri($"..\\..\\..\\..\\..\\pacts\\react-client-weatherapi.json")
                 // .PactUri($"{PactFlowServerUrl}/pacts/provider/WeatherAPI/consumer/react-client/latest", PactFlowServer)
 
                 // or we can pick all from broker

@@ -20,7 +20,7 @@
     <PackageReference Include="PactNet.Windows" Version="3.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\weatherapi\weatherapi.csproj" />
+    <ProjectReference Include="..\..\weatherapi\weatherapi.csproj" />
   </ItemGroup>
   <ItemGroup>
    <None Update="appsettings.Pact.json">
