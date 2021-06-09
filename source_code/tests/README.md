@@ -189,3 +189,23 @@ public void EnsureWeatherAPIHonorsPactWithConsumer1()
         .Verify();
 }
 ```
+
+# Load Test 
+- Artillery.io, JMeter
+- todo
+
+# Smoke Test 
+- todo
+
+# End to End Test
+- todo
+
+# Manual Test
+- todo
+
+# Discovery Test
+- todo
+
+# Penetration Test
+- todo
+
