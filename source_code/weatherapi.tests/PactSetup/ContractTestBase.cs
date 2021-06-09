@@ -46,6 +46,19 @@ namespace API.Tests.PactSetup
 
             _webHost.Start();
 
+            // get current GIT HEAD SHA
+            var process = new System.Diagnostics.Process()
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo("git", "rev-parse HEAD")
+                {
+                    RedirectStandardOutput = true
+                }
+            };
+            process.Start();
+
+            string sha = process.StandardOutput.ReadToEnd().Replace("\n", ""); // output always has newline at the end
+            process.WaitForExit();
+
             _pactVerifierConfig = new PactVerifierConfig
             {
                 //NOTE: We default to using a ConsoleOutput, however xUnit 2 does not capture
@@ -65,9 +78,9 @@ namespace API.Tests.PactSetup
 
                 //sends to the provider
                 Verbose = true, //Output verbose verification logs to the test output
-                // the version of this provider, can come from GIT SHA
-                ProviderVersion = "1.0.4",
-                PublishVerificationResults = true
+                                // the version of this provider, can come from GIT SHA
+                PublishVerificationResults = true,
+                ProviderVersion = sha
             };
         }
 
