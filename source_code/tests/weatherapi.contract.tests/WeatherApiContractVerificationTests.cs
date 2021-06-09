@@ -16,7 +16,6 @@ namespace API.Tests
         [Fact]
         public void EnsureWeatherAPIHonorsPactWithConsumer1()
         {
-
             new PactVerifier(_pactVerifierConfig)
                 .ProviderState($"{ProviderUri}/provider-states")
                 // this is the name os the provider, we can't have space for some reason
