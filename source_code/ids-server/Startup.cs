@@ -8,6 +8,8 @@ using System.Reflection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using System;
+using Duende.IdentityServer.Services;
+using Duende.IdentityServer.AspNetIdentity;
 
 namespace idsserver
 {
@@ -56,7 +58,7 @@ namespace idsserver
             services.AddIdentityServer(options =>
             {
                 // login page is now on the Angular SPA
-                options.UserInteraction.LoginUrl = "~/";
+                // options.UserInteraction.LoginUrl = "~/";
             })
                 // add Configuration DB context 
                 // dotnet ef migrations add InitialIdsMigration -c PersistedGrantDbContext
@@ -70,6 +72,11 @@ namespace idsserver
                 })
                 .AddAspNetIdentity<IdentityUser>();
 
+            services.AddTransient<IRefreshTokenService, MyRefreshTokenService>();
+
+            services.AddTransient<IProfileService, CustomProfileService>();
+            // out of the box provided profile service for ASP.NET Identity
+            services.AddScoped<ProfileService<IdentityUser>>();
             // add views
             var mvcBuilder = services.AddControllersWithViews();
 

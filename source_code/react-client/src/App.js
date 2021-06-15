@@ -25,16 +25,21 @@ function HomePage() {
 		redirect_uri: "http://localhost:3000/signin-oidc",
 		post_logout_redirect_uri: "http://localhost:3000",
 		response_type: "code",
-		scope: "openid profile weatherapi.read",
+		scope: "openid profile weatherapi.read offline_access",
 	});
 
 	useEffect(() => {
+		// mgr.getUser().then((user) => {
+		// 	if (user) {
+		// 		var api = new WeatherAPI("https://localhost:5002");
+		// 		api.getWeatherForecast(user.access_token).then((data) =>
+		// 			setState({ user, data })
+		// 		);
+		// 	}
+		// });
 		mgr.getUser().then((user) => {
 			if (user) {
-				var api = new WeatherAPI("https://localhost:5002");
-				api.getWeatherForecast(user.access_token).then((data) =>
-					setState({ user, data })
-				);
+				setState({ user });
 			}
 		});
 	}, []);

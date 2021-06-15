@@ -33,3 +33,18 @@ Authorization: Bearer xRy0RdbaDE1oSvyxEfuT6Q
 	],
 	"providerVersionTags": []
 }
+
+
+// AD79EC18A52CF07F29140D8A50FB7657CB89F623ED27124703D5FC68B6A8B7D4
+
+// 28AA0E503573105E03A24F5485C204DF29CE636F1AB82D52CA2420572C1A7C18
+
+###
+
+POST https://localhost:5001/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id=interactive.private&client_secret=SuperSecretPassword&grant_type=refresh_token&refresh_token=579714B4288BD01EF9469BC2C2B2DABEDAAE41B1963D400BB44640776AAB8C57
+
+
+// 

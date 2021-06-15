@@ -9,6 +9,9 @@ using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Stores;
 using Microsoft.AspNetCore.Identity;
 using IdentityServerHost.Quickstart.UI;
+using Microsoft.Extensions.Logging;
+using Duende.IdentityServer.Extensions;
+using System.Security.Claims;
 
 namespace idsserver
 {
@@ -21,6 +24,9 @@ namespace idsserver
         private readonly IEventService _events;
         private readonly SignInManager<IdentityUser> _manager;
         private readonly UserManager<IdentityUser> _usermanager;
+        private readonly IPersistedGrantService grantService;
+        private readonly IPersistedGrantStore grantStore;
+        private readonly ILogger<AuthController> logger;
 
         public AuthController(
             IIdentityServerInteractionService interaction,
@@ -28,7 +34,10 @@ namespace idsserver
             IAuthenticationSchemeProvider schemeProvider,
             IEventService events,
             SignInManager<IdentityUser> manager,
-            UserManager<IdentityUser> usermanager)
+            UserManager<IdentityUser> usermanager,
+            IPersistedGrantService grantService,
+            IPersistedGrantStore grantStore,
+            ILogger<AuthController> logger)
         {
             _interaction = interaction;
             _clientStore = clientStore;
@@ -36,6 +45,9 @@ namespace idsserver
             _events = events;
             _manager = manager;
             _usermanager = usermanager;
+            this.grantService = grantService;
+            this.grantStore = grantStore;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -165,5 +177,61 @@ namespace idsserver
                 return BadRequest("Invalid authenticator code.");
             }
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> EndAllOtherSessions()
+        {
+            if (User?.Identity.IsAuthenticated == true)
+            {
+                // get user id (which is the SubjectID)
+                var subjectId = User.Identity.GetSubjectId();
+                var user = await this._usermanager.FindByIdAsync(subjectId);
+                this.logger.LogInformation($"end all other session for user {user.Email} with subject Id {subjectId}");
+
+                // get the current SessionID for this user
+                var result = await HttpContext.AuthenticateAsync();
+                var sid = result.Properties.Items.FirstOrDefault(x => x.Key == "session_id").Value;
+                this.logger.LogInformation($"current Session ID is {sid}");
+
+                // get all for this user
+                var allSessions = await this.grantStore.GetAllAsync(new PersistedGrantFilter
+                {
+                    SubjectId = subjectId
+                });
+
+                this.logger.LogInformation($"this user has {allSessions.Count()} sessions");
+                foreach (var s in allSessions)
+                {
+                    var data = s.Data;
+                    if (s.SessionId != sid)
+                    {
+                        // remove the session 
+                        // when we hook this into DB, it will result in 1 call to the DB
+                        await this.grantService.RemoveAllGrantsAsync(subjectId, s.ClientId, s.SessionId);
+                        this.logger.LogInformation($"killed session Id {s.SessionId}, client ID: {s.ClientId}");
+                    }
+                }
+
+                //  this will make sure that all other sessions are killed
+
+                await this._usermanager.UpdateSecurityStampAsync(user);
+                this.logger.LogInformation($"update Security Stampt");
+            }
+            return Ok();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ValidateSecurityStamp()
+        {
+            if (User?.Identity.IsAuthenticated == true)
+            {
+                // get user id (which is the SubjectID)
+                var validationResponse = await this._manager.ValidateSecurityStampAsync(User);
+                return Ok(validationResponse == null ? "empty" : "not_empty");
+            }
+            return Ok("nothing");
+        }
+
     }
 }
