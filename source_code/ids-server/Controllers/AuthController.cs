@@ -178,7 +178,10 @@ namespace idsserver
             }
         }
 
-
+        /// <summary>
+        /// End all refresh tokens for the logged in user, accept the current on
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IActionResult> EndAllOtherSessions()
         {
@@ -217,6 +220,28 @@ namespace idsserver
 
                 await this._usermanager.UpdateSecurityStampAsync(user);
                 this.logger.LogInformation($"update Security Stampt");
+            }
+            return Ok();
+        }
+
+
+        /// <summary>
+        /// End all refresh tokens for the logged in user
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<IActionResult> EndAllSessions()
+        {
+            if (User?.Identity.IsAuthenticated == true)
+            {
+                // get user id (which is the SubjectID)
+                var subjectId = User.Identity.GetSubjectId();
+                var user = await this._usermanager.FindByIdAsync(subjectId);
+                this.logger.LogInformation($"end all other session for user {user.Email} with subject Id {subjectId}");
+                await this.grantService.RemoveAllGrantsAsync(subjectId);
+                
+                //  this will make sure that all other sessions are killed
+                await this._usermanager.UpdateSecurityStampAsync(user);
             }
             return Ok();
         }

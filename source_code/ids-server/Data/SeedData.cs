@@ -152,6 +152,28 @@ namespace idsserver
                         AllowOfflineAccess = true,
                         AllowedScopes = { "openid", "profile", "weatherapi.read" }
                     },
+                    new Client
+                {
+                    ClientId = "MvcClient",
+                    AllowedGrantTypes = GrantTypes.Code,
+                    ClientSecrets = { new Secret("password".Sha256()) },
+
+                    PostLogoutRedirectUris = { "https://localhost:5005/signout-callback-oidc", "https://oauth.pstmn.io/v1/callback" },
+                    RedirectUris = { "https://localhost:5005/signin-oidc" },
+
+                    FrontChannelLogoutUri = "https://localhost:5005/signout-oidc",
+
+                    AllowOfflineAccess = true,
+                    // how long the refresh token should live
+                    RefreshTokenExpiration = TokenExpiration.Sliding,
+                    AbsoluteRefreshTokenLifetime = 600, 
+
+                    // this will dictate the Session Cookie on the client app (e.g. MVC)
+                    IdentityTokenLifetime = 30,
+                    AllowedScopes = {
+                        "openid", "profile", "weatherapi.read"
+                    },
+                },
                 };
 
                 foreach (var client in clients)

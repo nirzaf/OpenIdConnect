@@ -27,6 +27,7 @@ namespace idsserver
             // copy over the sid claim from AccessToken
             identity.AddClaim(new Claim(JwtClaimTypes.SessionId, request.AccessToken.SessionId));
 
+            // save the information about the request session
             request.Subject = new ClaimsPrincipal(identity);
             return await base.CreateRefreshTokenAsync(request);
         }
