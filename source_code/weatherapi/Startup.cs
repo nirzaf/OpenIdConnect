@@ -1,8 +1,4 @@
-using System;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -26,7 +22,6 @@ namespace weatherapi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
                 {
@@ -39,12 +34,11 @@ namespace weatherapi
                     {
                         // this is self issued
                         var signKey = Configuration.GetValue<string>("IssuerSigningKey");
-
                         options.TokenValidationParameters = new TokenValidationParameters
                         {
                             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signKey)),
                             ValidateIssuer = true,
-                            ValidIssuer = issuer,
+                            ValidIssuer = issuer
                         };
                     }
                 });
@@ -87,10 +81,7 @@ namespace weatherapi
             app.UseAuthorization();
 
 
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }
 }
