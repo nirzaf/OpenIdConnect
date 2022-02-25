@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Text.Encodings.Web;
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Mappers;
 using Duende.IdentityServer.Models;
@@ -16,6 +14,7 @@ namespace idsserver
     public class DataSeeder
     {
         private const string AuthenticatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
+
         public static void SeedIdentityServer(IServiceProvider serviceProvider)
         {
             Console.WriteLine("Seeding data for Identity server");
@@ -40,17 +39,18 @@ namespace idsserver
                 {
                     UserName = "alice",
                     Email = "alice@test.com",
-                    EmailConfirmed = true,
+                    EmailConfirmed = true
                 };
                 var result = manager.CreateAsync(alice, "alice").Result;
 
                 if (result.Succeeded)
                 {
-                    result = manager.AddClaimsAsync(alice, new Claim[] {
-                        new Claim(JwtClaimTypes.Name, "Alice Smith"),
-                        new Claim(JwtClaimTypes.GivenName, "Alice"),
-                        new Claim(JwtClaimTypes.FamilyName, "Smith"),
-                        new Claim(JwtClaimTypes.WebSite, "Website"),
+                    result = manager.AddClaimsAsync(alice, new Claim[]
+                    {
+                        new(JwtClaimTypes.Name, "Alice Smith"),
+                        new(JwtClaimTypes.GivenName, "Alice"),
+                        new(JwtClaimTypes.FamilyName, "Smith"),
+                        new(JwtClaimTypes.WebSite, "Website")
                     }).Result;
 
                     Console.WriteLine("added alice user");
@@ -69,17 +69,18 @@ namespace idsserver
                 {
                     UserName = "bob",
                     Email = "bob@test.com",
-                    EmailConfirmed = true,
+                    EmailConfirmed = true
                 };
                 var result = manager.CreateAsync(bob, "bob").Result;
 
                 if (result.Succeeded)
                 {
-                    result = manager.AddClaimsAsync(bob, new Claim[] {
-                        new Claim(JwtClaimTypes.Name, "bob Smith"),
-                        new Claim(JwtClaimTypes.GivenName, "bob"),
-                        new Claim(JwtClaimTypes.FamilyName, "Smith"),
-                        new Claim(JwtClaimTypes.WebSite, "Website"),
+                    result = manager.AddClaimsAsync(bob, new Claim[]
+                    {
+                        new(JwtClaimTypes.Name, "bob Smith"),
+                        new(JwtClaimTypes.GivenName, "bob"),
+                        new(JwtClaimTypes.FamilyName, "Smith"),
+                        new(JwtClaimTypes.WebSite, "Website")
                     }).Result;
 
                     Console.WriteLine("added bob user");
@@ -93,7 +94,7 @@ namespace idsserver
 
                     var authenticatorUri = HelperClass.GenerateQrCodeUri(email, unformattedKey);
 
-                    t = manager.SetTwoFactorEnabledAsync(bob, enabled: true).Result;
+                    t = manager.SetTwoFactorEnabledAsync(bob, true).Result;
 
                     Console.WriteLine("Enabled 2FA with Authenticator URL: " + authenticatorUri);
                 }
@@ -113,19 +114,21 @@ namespace idsserver
                 Console.WriteLine($"2FA enabled = {isEnabled}, with Authenticator URL: " + authenticatorUri);
             }
         }
+
         private static void SeedData(ConfigurationDbContext context)
         {
             if (!context.Clients.Any())
             {
-                var clients = new List<Client> {
-                    new Client
+                var clients = new List<Client>
+                {
+                    new()
                     {
                         ClientId = "m2m.client",
                         AllowedGrantTypes = GrantTypes.ClientCredentials,
                         ClientSecrets = { new Secret("SuperSecretPassword".Sha256()) },
                         AllowedScopes = { "weatherapi.read" }
                     },
-                    new Client
+                    new()
                     {
                         ClientId = "interactive.public",
 
@@ -139,7 +142,7 @@ namespace idsserver
 
                         AllowedScopes = { "openid", "profile", "weatherapi.read" }
                     },
-                    new Client
+                    new()
                     {
                         // e.g. MVC apps (or any other client apps that can secure the client secret)
                         ClientId = "interactive.private",
@@ -152,34 +155,37 @@ namespace idsserver
                         AllowOfflineAccess = true,
                         AllowedScopes = { "openid", "profile", "weatherapi.read" }
                     },
-                    new Client
-                {
-                    ClientId = "MvcClient",
-                    AllowedGrantTypes = GrantTypes.Code,
-                    ClientSecrets = { new Secret("password".Sha256()) },
+                    new()
+                    {
+                        ClientId = "MvcClient",
+                        AllowedGrantTypes = GrantTypes.Code,
+                        ClientSecrets = { new Secret("password".Sha256()) },
 
-                    PostLogoutRedirectUris = { "https://localhost:5005/signout-callback-oidc", "https://oauth.pstmn.io/v1/callback" },
-                    RedirectUris = { "https://localhost:5005/signin-oidc" },
+                        PostLogoutRedirectUris =
+                            { "https://localhost:5005/signout-callback-oidc", "https://oauth.pstmn.io/v1/callback" },
+                        RedirectUris = { "https://localhost:5005/signin-oidc" },
 
-                    FrontChannelLogoutUri = "https://localhost:5005/signout-oidc",
+                        FrontChannelLogoutUri = "https://localhost:5005/signout-oidc",
 
-                    AllowOfflineAccess = true,
-                    // how long the refresh token should live
-                    RefreshTokenExpiration = TokenExpiration.Sliding,
-                    AbsoluteRefreshTokenLifetime = 600, 
+                        AllowOfflineAccess = true,
+                        // how long the refresh token should live
+                        RefreshTokenExpiration = TokenExpiration.Sliding,
+                        AbsoluteRefreshTokenLifetime = 600,
 
-                    // this will dictate the Session Cookie on the client app (e.g. MVC)
-                    IdentityTokenLifetime = 30,
-                    AllowedScopes = {
-                        "openid", "profile", "weatherapi.read"
-                    },
-                },
+                        // this will dictate the Session Cookie on the client app (e.g. MVC)
+                        IdentityTokenLifetime = 30,
+                        AllowedScopes =
+                        {
+                            "openid", "profile", "weatherapi.read"
+                        }
+                    }
                 };
 
                 foreach (var client in clients)
                 {
                     context.Clients.Add(client.ToEntity());
                 }
+
                 context.SaveChanges();
                 Console.WriteLine($"Added {clients.Count()} clients");
             }
@@ -190,9 +196,11 @@ namespace idsserver
 
             if (!context.ApiResources.Any())
             {
-                var apiResources = new List<ApiResource>() {
-                    new ApiResource("weatherapi") {
-                        Scopes = { "weatherapi.read" },
+                var apiResources = new List<ApiResource>()
+                {
+                    new("weatherapi")
+                    {
+                        Scopes = { "weatherapi.read" }
                     }
                 };
 
@@ -200,6 +208,7 @@ namespace idsserver
                 {
                     context.ApiResources.Add(apiRrc.ToEntity());
                 }
+
                 context.SaveChanges();
                 Console.WriteLine($"Added {apiResources.Count()} api resources");
             }
@@ -211,15 +220,17 @@ namespace idsserver
 
             if (!context.ApiScopes.Any())
             {
-                var scopes = new List<ApiScope> {
-                    new ApiScope("weatherapi.read", "Read Access to API"),
-                    new ApiScope("weatherapi.write", "Write Access to API"),
+                var scopes = new List<ApiScope>
+                {
+                    new("weatherapi.read", "Read Access to API"),
+                    new("weatherapi.write", "Write Access to API")
                 };
 
                 foreach (var scope in scopes)
                 {
                     context.ApiScopes.Add(scope.ToEntity());
                 }
+
                 context.SaveChanges();
                 Console.WriteLine($"Added {scopes.Count()} api scopes");
             }
@@ -234,13 +245,14 @@ namespace idsserver
                 {
                     new IdentityResources.OpenId(),
                     new IdentityResources.Profile(),
-                    new IdentityResources.Email(),
+                    new IdentityResources.Email()
                 };
 
                 foreach (var identity in identityResources)
                 {
                     context.IdentityResources.Add(identity.ToEntity());
                 }
+
                 context.SaveChanges();
                 Console.WriteLine($"Added {identityResources.Count()} identity Resources");
             }
@@ -249,6 +261,5 @@ namespace idsserver
                 Console.WriteLine("api scopes already added..");
             }
         }
-
     }
 }

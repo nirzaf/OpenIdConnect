@@ -1,28 +1,26 @@
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Duende.IdentityServer.Events;
+using Duende.IdentityServer.Extensions;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Stores;
-using Microsoft.AspNetCore.Identity;
 using IdentityServerHost.Quickstart.UI;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Duende.IdentityServer.Extensions;
-using System.Security.Claims;
 
 namespace idsserver
 {
     [AllowAnonymous]
     public class AuthController : Controller
     {
-        private readonly IIdentityServerInteractionService _interaction;
         private readonly IClientStore _clientStore;
-        private readonly IAuthenticationSchemeProvider _schemeProvider;
         private readonly IEventService _events;
+        private readonly IIdentityServerInteractionService _interaction;
         private readonly SignInManager<IdentityUser> _manager;
+        private readonly IAuthenticationSchemeProvider _schemeProvider;
         private readonly UserManager<IdentityUser> _usermanager;
         private readonly IPersistedGrantService grantService;
         private readonly IPersistedGrantStore grantStore;
@@ -65,10 +63,11 @@ namespace idsserver
 
             if (user != null)
             {
-                var result = await _manager.PasswordSignInAsync(user, model.Password, model.RememberLogin, lockoutOnFailure: false);
+                var result = await _manager.PasswordSignInAsync(user, model.Password, model.RememberLogin, false);
                 if (result.Succeeded)
                 {
-                    await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
+                    await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName,
+                        clientId: context?.Client.ClientId));
 
                     if (context != null)
                     {
@@ -111,6 +110,7 @@ namespace idsserver
                         return BadRequest("invalid return URL");
                     }
                 }
+
                 if (result.RequiresTwoFactor)
                 {
                     return Unauthorized(new
@@ -120,9 +120,9 @@ namespace idsserver
                         RememberMe = model.RememberLogin
                     });
                 }
+
                 if (result.IsLockedOut)
                 {
-
                     return Unauthorized(new
                     {
                         Lockeout = true,
@@ -136,11 +136,11 @@ namespace idsserver
                 }
             }
 
-            await _events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials", clientId: context?.Client.ClientId));
+            await _events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials",
+                clientId: context?.Client.ClientId));
             ModelState.AddModelError(string.Empty, AccountOptions.InvalidCredentialsErrorMessage);
             return BadRequest("Something went wrong");
         }
-
 
 
         [HttpPost]
@@ -154,7 +154,9 @@ namespace idsserver
 
             var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
 
-            var result = await _manager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, model.RememberMe, model.RememberMachine);
+            var result =
+                await _manager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, model.RememberMe,
+                    model.RememberMachine);
 
             if (result.Succeeded)
             {
@@ -221,6 +223,7 @@ namespace idsserver
                 await _usermanager.UpdateSecurityStampAsync(user);
                 logger.LogInformation($"update Security Stampt");
             }
+
             return Ok();
         }
 
@@ -239,10 +242,11 @@ namespace idsserver
                 var user = await _usermanager.FindByIdAsync(subjectId);
                 logger.LogInformation($"end all other session for user {user.Email} with subject Id {subjectId}");
                 await grantService.RemoveAllGrantsAsync(subjectId);
-                
+
                 //  this will make sure that all other sessions are killed
                 await _usermanager.UpdateSecurityStampAsync(user);
             }
+
             return Ok();
         }
 
@@ -255,8 +259,8 @@ namespace idsserver
                 var validationResponse = await _manager.ValidateSecurityStampAsync(User);
                 return Ok(validationResponse == null ? "empty" : "not_empty");
             }
+
             return Ok("nothing");
         }
-
     }
 }

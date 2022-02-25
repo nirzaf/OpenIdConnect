@@ -1,10 +1,6 @@
-using System;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Duende.IdentityServer.AspNetIdentity;
-using Duende.IdentityServer.Configuration;
-using Duende.IdentityServer.Extensions;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Stores;
@@ -17,7 +13,8 @@ namespace idsserver
 {
     public class MyRefreshTokenService : DefaultRefreshTokenService
     {
-        public MyRefreshTokenService(IRefreshTokenStore refreshTokenStore, IProfileService profile, ISystemClock clock, ILogger<DefaultRefreshTokenService> logger) : base(refreshTokenStore, profile, clock, logger)
+        public MyRefreshTokenService(IRefreshTokenStore refreshTokenStore, IProfileService profile, ISystemClock clock,
+            ILogger<DefaultRefreshTokenService> logger) : base(refreshTokenStore, profile, clock, logger)
         {
         }
 
@@ -35,9 +32,9 @@ namespace idsserver
 
     public class CustomProfileService : IProfileService
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly IUserClaimsPrincipalFactory<IdentityUser> _claimsFactory;
         private readonly ProfileService<IdentityUser> _builtInService;
+        private readonly IUserClaimsPrincipalFactory<IdentityUser> _claimsFactory;
+        private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<CustomProfileService> logger;
         private readonly SignInManager<IdentityUser> signInManager;
 
@@ -47,7 +44,7 @@ namespace idsserver
             ProfileService<IdentityUser> builtInService,
             ILogger<CustomProfileService> logger,
             SignInManager<IdentityUser> signInManager
-            )
+        )
         {
             _userManager = userManager;
             _claimsFactory = claimsFactory;
@@ -86,5 +83,4 @@ namespace idsserver
             }
         }
     }
-
 }
