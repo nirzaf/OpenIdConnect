@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using static System.Linq.Enumerable;
 
 namespace weatherapi.Controllers
 {
@@ -27,14 +27,20 @@ namespace weatherapi.Controllers
         [HttpGet]
         public IEnumerable<WeatherForecast> Get()
         {
-            var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            Random rng = new();
+            WeatherForecast[] data = Range(1, 5).Select(index => new WeatherForecast
                 {
                     Date = DateTime.Now.AddDays(index),
                     TemperatureC = rng.Next(-20, 55),
                     Summary = Summaries[rng.Next(Summaries.Length)]
                 })
                 .ToArray();
+            foreach (WeatherForecast items in data)
+            {
+                _logger.LogInformation(items.Area + items.City + items.Country + items.Date + items.Summary);
+            }
+
+            return data;
         }
     }
 }
