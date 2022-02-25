@@ -189,21 +189,21 @@ namespace idsserver
             {
                 // get user id (which is the SubjectID)
                 var subjectId = User.Identity.GetSubjectId();
-                var user = await this._usermanager.FindByIdAsync(subjectId);
-                this.logger.LogInformation($"end all other session for user {user.Email} with subject Id {subjectId}");
+                var user = await _usermanager.FindByIdAsync(subjectId);
+                logger.LogInformation($"end all other session for user {user.Email} with subject Id {subjectId}");
 
                 // get the current SessionID for this user
                 var result = await HttpContext.AuthenticateAsync();
                 var sid = result.Properties.Items.FirstOrDefault(x => x.Key == "session_id").Value;
-                this.logger.LogInformation($"current Session ID is {sid}");
+                logger.LogInformation($"current Session ID is {sid}");
 
                 // get all for this user
-                var allSessions = await this.grantStore.GetAllAsync(new PersistedGrantFilter
+                var allSessions = await grantStore.GetAllAsync(new PersistedGrantFilter
                 {
                     SubjectId = subjectId
                 });
 
-                this.logger.LogInformation($"this user has {allSessions.Count()} sessions");
+                logger.LogInformation($"this user has {allSessions.Count()} sessions");
                 foreach (var s in allSessions)
                 {
                     var data = s.Data;
@@ -211,15 +211,15 @@ namespace idsserver
                     {
                         // remove the session 
                         // when we hook this into DB, it will result in 1 call to the DB
-                        await this.grantService.RemoveAllGrantsAsync(subjectId, s.ClientId, s.SessionId);
-                        this.logger.LogInformation($"killed session Id {s.SessionId}, client ID: {s.ClientId}");
+                        await grantService.RemoveAllGrantsAsync(subjectId, s.ClientId, s.SessionId);
+                        logger.LogInformation($"killed session Id {s.SessionId}, client ID: {s.ClientId}");
                     }
                 }
 
                 //  this will make sure that all other sessions are killed
 
-                await this._usermanager.UpdateSecurityStampAsync(user);
-                this.logger.LogInformation($"update Security Stampt");
+                await _usermanager.UpdateSecurityStampAsync(user);
+                logger.LogInformation($"update Security Stampt");
             }
             return Ok();
         }
@@ -236,12 +236,12 @@ namespace idsserver
             {
                 // get user id (which is the SubjectID)
                 var subjectId = User.Identity.GetSubjectId();
-                var user = await this._usermanager.FindByIdAsync(subjectId);
-                this.logger.LogInformation($"end all other session for user {user.Email} with subject Id {subjectId}");
-                await this.grantService.RemoveAllGrantsAsync(subjectId);
+                var user = await _usermanager.FindByIdAsync(subjectId);
+                logger.LogInformation($"end all other session for user {user.Email} with subject Id {subjectId}");
+                await grantService.RemoveAllGrantsAsync(subjectId);
                 
                 //  this will make sure that all other sessions are killed
-                await this._usermanager.UpdateSecurityStampAsync(user);
+                await _usermanager.UpdateSecurityStampAsync(user);
             }
             return Ok();
         }
@@ -252,7 +252,7 @@ namespace idsserver
             if (User?.Identity.IsAuthenticated == true)
             {
                 // get user id (which is the SubjectID)
-                var validationResponse = await this._manager.ValidateSecurityStampAsync(User);
+                var validationResponse = await _manager.ValidateSecurityStampAsync(User);
                 return Ok(validationResponse == null ? "empty" : "not_empty");
             }
             return Ok("nothing");

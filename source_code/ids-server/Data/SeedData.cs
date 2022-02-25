@@ -26,9 +26,9 @@ namespace idsserver
             var userMng = serviceProvider
                 .GetRequiredService<UserManager<IdentityUser>>();
 
-            DataSeeder.SeedData(context);
+            SeedData(context);
 
-            DataSeeder.SeedTestUsers(userMng);
+            SeedTestUsers(userMng);
         }
 
         private static void SeedTestUsers(UserManager<IdentityUser> manager)
