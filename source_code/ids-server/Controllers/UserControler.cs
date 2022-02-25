@@ -1,10 +1,9 @@
+using System.Text.Encodings.Web;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using System.Text.Encodings.Web;
-using idsserver;
 
 namespace idsserver
 {
@@ -14,19 +13,22 @@ namespace idsserver
     [Authorize]
     public class UserController : Controller
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<UserController> _logger;
+        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UrlEncoder _urlEncoder;
+        private readonly UserManager<IdentityUser> _userManager;
+
         public UserController(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
             ILogger<UserController> logger,
             UrlEncoder urlEncoder
-            )
+        )
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
+            _urlEncoder = urlEncoder;
         }
 
         [HttpGet]
@@ -34,9 +36,7 @@ namespace idsserver
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
-
             bool isTwoFactorEnabled = await _userManager.GetTwoFactorEnabledAsync(user);
-
             return Ok(isTwoFactorEnabled);
         }
 
@@ -45,14 +45,12 @@ namespace idsserver
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
-
             _logger.LogInformation($"turning 2FA for user with code {code.Code}");
 
-            bool is2faTokenValid = await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, code.Code);
-
-            if (!is2faTokenValid) return BadRequest("Invalid Token");
-
-            await _userManager.SetTwoFactorEnabledAsync(user, enabled: true);
+            bool is2FaTokenValid = await _userManager.VerifyTwoFactorTokenAsync(user,
+                _userManager.Options.Tokens.AuthenticatorTokenProvider, code.Code);
+            if (!is2FaTokenValid) return BadRequest("Invalid Token");
+            await _userManager.SetTwoFactorEnabledAsync(user, true);
 
             return Ok();
         }
@@ -66,7 +64,6 @@ namespace idsserver
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
-
             var unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
             if (string.IsNullOrEmpty(unformattedKey))
             {
@@ -75,7 +72,6 @@ namespace idsserver
             }
 
             var sharedKey = HelperClass.FormatKey(unformattedKey);
-
             var email = await _userManager.GetEmailAsync(user);
             var authenticatorUri = HelperClass.GenerateQrCodeUri(email, unformattedKey);
 
@@ -95,9 +91,7 @@ namespace idsserver
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
-
-            await _userManager.SetTwoFactorEnabledAsync(user, enabled: false);
-
+            await _userManager.SetTwoFactorEnabledAsync(user, false);
             return Ok();
         }
     }
