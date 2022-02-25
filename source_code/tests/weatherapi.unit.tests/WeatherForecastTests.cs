@@ -1,6 +1,4 @@
-using System;
 using Xunit;
-using weatherapi;
 
 namespace weatherapi.unit.tests
 {
@@ -14,9 +12,11 @@ namespace weatherapi.unit.tests
         public void CanReturnCorrectFahrenheit(int inputInC, int expectedInF)
         {
             // Arrange
-            var temp = new WeatherForecast();
-            // Act
-            temp.TemperatureC = inputInC;
+            var temp = new WeatherForecast
+            {
+                // Act
+                TemperatureC = inputInC
+            };
             // Assert
             Assert.Equal(expectedInF, temp.TemperatureF);
         }
