@@ -68,20 +68,15 @@ namespace weatherapi
             }
 
             app.UseHttpsRedirection();
-
             // use Cors
             app.UseCors(config => config
                 .AllowAnyOrigin()
                 .AllowAnyHeader()
                 .AllowAnyMethod()
             );
-
             app.UseRouting();
-
             app.UseAuthentication();
             app.UseAuthorization();
-
-
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }
