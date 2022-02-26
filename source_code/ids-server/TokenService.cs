@@ -20,7 +20,7 @@ namespace idsserver
 
         public override async Task<string> CreateRefreshTokenAsync(RefreshTokenCreationRequest request)
         {
-            var identity = new ClaimsIdentity(request.Subject.Identity);
+            ClaimsIdentity identity = new ClaimsIdentity(request.Subject.Identity);
             // copy over the sid claim from AccessToken
             identity.AddClaim(new Claim(JwtClaimTypes.SessionId, request.AccessToken.SessionId));
 
@@ -71,7 +71,7 @@ namespace idsserver
             if (context.Subject.Identity?.AuthenticationType == IdentityConstants.ApplicationScheme)
             {
                 _logger.LogInformation($"checking if user still valid");
-                var validationResponse = await _signInManager.ValidateSecurityStampAsync(context.Subject);
+                IdentityUser validationResponse = await _signInManager.ValidateSecurityStampAsync(context.Subject);
 
                 if (validationResponse == null)
                 {

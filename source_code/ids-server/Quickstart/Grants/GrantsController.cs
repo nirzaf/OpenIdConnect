@@ -2,15 +2,16 @@
 // See LICENSE in the project root for license information.
 
 
-using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Duende.IdentityServer.Events;
 using Duende.IdentityServer.Extensions;
+using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Stores;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace IdentityServerHost.Quickstart.UI
 {
@@ -21,10 +22,10 @@ namespace IdentityServerHost.Quickstart.UI
     [Authorize]
     public class GrantsController : Controller
     {
-        private readonly IIdentityServerInteractionService _interaction;
         private readonly IClientStore _clients;
-        private readonly IResourceStore _resources;
         private readonly IEventService _events;
+        private readonly IIdentityServerInteractionService _interaction;
+        private readonly IResourceStore _resources;
 
         public GrantsController(IIdentityServerInteractionService interaction,
             IClientStore clients,
@@ -61,17 +62,17 @@ namespace IdentityServerHost.Quickstart.UI
 
         private async Task<GrantsViewModel> BuildViewModelAsync()
         {
-            var grants = await _interaction.GetAllUserGrantsAsync();
+            IEnumerable<Grant> grants = await _interaction.GetAllUserGrantsAsync();
 
-            var list = new List<GrantViewModel>();
-            foreach(var grant in grants)
+            List<GrantViewModel> list = new List<GrantViewModel>();
+            foreach (Grant grant in grants)
             {
-                var client = await _clients.FindClientByIdAsync(grant.ClientId);
+                Client client = await _clients.FindClientByIdAsync(grant.ClientId);
                 if (client != null)
                 {
-                    var resources = await _resources.FindResourcesByScopeAsync(grant.Scopes);
+                    Resources resources = await _resources.FindResourcesByScopeAsync(grant.Scopes);
 
-                    var item = new GrantViewModel()
+                    GrantViewModel item = new GrantViewModel()
                     {
                         ClientId = client.ClientId,
                         ClientName = client.ClientName ?? client.ClientId,

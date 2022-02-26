@@ -1,9 +1,9 @@
 @model ErrorViewModel
 
 @{
-    var error = Model?.Error?.Error;
-    var errorDescription = Model?.Error?.ErrorDescription;
-    var request_id = Model?.Error?.RequestId;
+    string error = Model?.Error?.Error;
+    string errorDescription = Model?.Error?.ErrorDescription;
+    string request_id = Model?.Error?.RequestId;
 }
 
 <div class="error-page">

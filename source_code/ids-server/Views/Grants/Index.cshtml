@@ -18,7 +18,7 @@
     }
     else
     {
-        foreach (var grant in Model.Grants)
+        foreach (GrantViewModel grant in Model.Grants)
         {
             <div class="card">
                 <div class="card-header">
@@ -61,7 +61,7 @@
                         <li class="list-group-item">
                             <label>Identity Grants</label>
                             <ul>
-                                @foreach (var name in grant.IdentityGrantNames)
+                                @foreach (string name in grant.IdentityGrantNames)
                                 {
                                     <li>@name</li>
                                 }
@@ -73,7 +73,7 @@
                         <li class="list-group-item">
                             <label>API Grants</label>
                             <ul>
-                                @foreach (var name in grant.ApiGrantNames)
+                                @foreach (string name in grant.ApiGrantNames)
                                 {
                                     <li>@name</li>
                                 }

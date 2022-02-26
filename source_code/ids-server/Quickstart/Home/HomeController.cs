@@ -2,13 +2,14 @@
 // See LICENSE in the project root for license information.
 
 
+using System.Threading.Tasks;
+using Duende.IdentityServer.Models;
+using Duende.IdentityServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using Duende.IdentityServer.Services;
 
 namespace IdentityServerHost.Quickstart.UI
 {
@@ -16,11 +17,12 @@ namespace IdentityServerHost.Quickstart.UI
     [AllowAnonymous]
     public class HomeController : Controller
     {
-        private readonly IIdentityServerInteractionService _interaction;
         private readonly IWebHostEnvironment _environment;
+        private readonly IIdentityServerInteractionService _interaction;
         private readonly ILogger _logger;
 
-        public HomeController(IIdentityServerInteractionService interaction, IWebHostEnvironment environment, ILogger<HomeController> logger)
+        public HomeController(IIdentityServerInteractionService interaction, IWebHostEnvironment environment,
+            ILogger<HomeController> logger)
         {
             _interaction = interaction;
             _environment = environment;
@@ -45,10 +47,10 @@ namespace IdentityServerHost.Quickstart.UI
         /// </summary>
         public async Task<IActionResult> Error(string errorId)
         {
-            var vm = new ErrorViewModel();
+            ErrorViewModel vm = new ErrorViewModel();
 
             // retrieve error details from identityserver
-            var message = await _interaction.GetErrorContextAsync(errorId);
+            ErrorMessage message = await _interaction.GetErrorContextAsync(errorId);
             if (message != null)
             {
                 vm.Error = message;

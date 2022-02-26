@@ -22,10 +22,10 @@ namespace idsserver
         {
             WriteLine("Seeding data for Identity server");
 
-            var context = serviceProvider
+            ConfigurationDbContext context = serviceProvider
                 .GetRequiredService<ConfigurationDbContext>();
 
-            var userMng = serviceProvider
+            UserManager<IdentityUser> userMng = serviceProvider
                 .GetRequiredService<UserManager<IdentityUser>>();
 
             SeedData(context);
@@ -35,7 +35,7 @@ namespace idsserver
 
         private static async Task SeedTestUsers(UserManager<IdentityUser> manager)
         {
-            var basicUser = manager.FindByNameAsync("fazrin@gmail.com").Result;
+            IdentityUser basicUser = manager.FindByNameAsync("fazrin@gmail.com").Result;
             if (basicUser is null)
             {
                 basicUser = new IdentityUser
@@ -44,7 +44,7 @@ namespace idsserver
                     Email = "fazrin@gmail.com",
                     EmailConfirmed = true
                 };
-                var result = manager.CreateAsync(basicUser, "123@Pa$$word!").Result;
+                IdentityResult result = manager.CreateAsync(basicUser, "123@Pa$$word!").Result;
 
                 if (result.Succeeded)
                 {
@@ -69,7 +69,7 @@ namespace idsserver
             }
 
             // bob need 2FA
-            var adminUser = await manager.FindByNameAsync("mfmfazrin1986@gmail.com");
+            IdentityUser adminUser = await manager.FindByNameAsync("mfmfazrin1986@gmail.com");
             if (adminUser is null)
             {
                 adminUser = new IdentityUser
@@ -78,7 +78,7 @@ namespace idsserver
                     Email = "mfmfazrin1986@gmail.com",
                     EmailConfirmed = true
                 };
-                var result = await manager.CreateAsync(adminUser, "123@Pa$$word!");
+                IdentityResult result = await manager.CreateAsync(adminUser, "123@Pa$$word!");
 
                 if (result.Succeeded)
                 {
@@ -92,22 +92,22 @@ namespace idsserver
 
                     WriteLine("Admin user added");
 
-                    var raka = await manager.ResetAuthenticatorKeyAsync(adminUser);
-                    var unformattedKey = await manager.GetAuthenticatorKeyAsync(adminUser);
-                    var sharedKey = HelperClass.FormatKey(unformattedKey);
-                    var email = await manager.GetEmailAsync(adminUser);
-                    var authenticatorUri = HelperClass.GenerateQrCodeUri(email, unformattedKey);
+                    IdentityResult raka = await manager.ResetAuthenticatorKeyAsync(adminUser);
+                    string unformattedKey = await manager.GetAuthenticatorKeyAsync(adminUser);
+                    string sharedKey = HelperClass.FormatKey(unformattedKey);
+                    string email = await manager.GetEmailAsync(adminUser);
+                    string authenticatorUri = HelperClass.GenerateQrCodeUri(email, unformattedKey);
                     raka = await manager.SetTwoFactorEnabledAsync(adminUser, true);
                     WriteLine("Enabled 2FA with Authenticator URL: " + authenticatorUri);
                 }
             }
             else
             {
-                var unformattedKey = await manager.GetAuthenticatorKeyAsync(adminUser);
-                var isEnabled = await manager.GetTwoFactorEnabledAsync(adminUser);
-                var sharedKey = HelperClass.FormatKey(unformattedKey);
-                var email = await manager.GetEmailAsync(adminUser);
-                var authenticatorUri = HelperClass.GenerateQrCodeUri(email, unformattedKey);
+                string unformattedKey = await manager.GetAuthenticatorKeyAsync(adminUser);
+                bool isEnabled = await manager.GetTwoFactorEnabledAsync(adminUser);
+                string sharedKey = HelperClass.FormatKey(unformattedKey);
+                string email = await manager.GetEmailAsync(adminUser);
+                string authenticatorUri = HelperClass.GenerateQrCodeUri(email, unformattedKey);
                 WriteLine("Admin already created");
                 WriteLine($"2FA enabled = {isEnabled}, with Authenticator URL: " + authenticatorUri);
             }
@@ -117,7 +117,7 @@ namespace idsserver
         {
             if (!context.Clients.Any())
             {
-                var clients = new List<Client>
+                List<Client> clients = new List<Client>
                 {
                     new()
                     {
@@ -214,7 +214,7 @@ namespace idsserver
                     }
                 };
 
-                foreach (var client in clients)
+                foreach (Client client in clients)
                 {
                     context.Clients.Add(client.ToEntity());
                 }
@@ -229,7 +229,7 @@ namespace idsserver
 
             if (!context.ApiResources.Any())
             {
-                var apiResources = new List<ApiResource>()
+                List<ApiResource> apiResources = new List<ApiResource>()
                 {
                     new("weatherapi")
                     {
@@ -237,7 +237,7 @@ namespace idsserver
                     }
                 };
 
-                foreach (var apiRrc in apiResources)
+                foreach (ApiResource apiRrc in apiResources)
                 {
                     context.ApiResources.Add(apiRrc.ToEntity());
                 }
@@ -253,13 +253,13 @@ namespace idsserver
 
             if (!context.ApiScopes.Any())
             {
-                var scopes = new List<ApiScope>
+                List<ApiScope> scopes = new List<ApiScope>
                 {
                     new("weatherapi.read", "Read Access to API"),
                     new("weatherapi.write", "Write Access to API")
                 };
 
-                foreach (var scope in scopes)
+                foreach (ApiScope scope in scopes)
                 {
                     context.ApiScopes.Add(scope.ToEntity());
                 }
@@ -274,14 +274,14 @@ namespace idsserver
 
             if (!context.IdentityResources.Any())
             {
-                var identityResources = new List<IdentityResource>
+                List<IdentityResource> identityResources = new List<IdentityResource>
                 {
                     new IdentityResources.OpenId(),
                     new IdentityResources.Profile(),
                     new IdentityResources.Email()
                 };
 
-                foreach (var identity in identityResources)
+                foreach (IdentityResource identity in identityResources)
                 {
                     context.IdentityResources.Add(identity.ToEntity());
                 }

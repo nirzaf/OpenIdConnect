@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Duende.IdentityServer.Events;
 using Duende.IdentityServer.Extensions;
+using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Stores;
 using IdentityServerHost.Quickstart.UI;
@@ -10,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace idsserver
 {
@@ -54,16 +57,17 @@ namespace idsserver
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginRequest model)
         {
-            var context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
+            AuthorizationRequest context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
 
             if (string.IsNullOrEmpty(model?.Username) || string.IsNullOrEmpty(model?.Password))
                 return BadRequest("invalid request payload");
 
-            var user = await _manager.UserManager.FindByNameAsync(model.Username);
+            IdentityUser user = await _manager.UserManager.FindByNameAsync(model.Username);
 
             if (user != null)
             {
-                var result = await _manager.PasswordSignInAsync(user, model.Password, model.RememberLogin, false);
+                SignInResult result =
+                    await _manager.PasswordSignInAsync(user, model.Password, model.RememberLogin, false);
                 if (result.Succeeded)
                 {
                     await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName,
@@ -148,13 +152,13 @@ namespace idsserver
         {
             model.ReturnUrl = model.ReturnUrl ?? Url.Content("/home");
 
-            var user = await _manager.GetTwoFactorAuthenticationUserAsync();
+            IdentityUser user = await _manager.GetTwoFactorAuthenticationUserAsync();
             if (user == null)
                 return BadRequest("User not logged in");
 
-            var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+            string authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
 
-            var result =
+            SignInResult result =
                 await _manager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, model.RememberMe,
                     model.RememberMachine);
 
@@ -190,25 +194,25 @@ namespace idsserver
             if (User?.Identity.IsAuthenticated == true)
             {
                 // get user id (which is the SubjectID)
-                var subjectId = User.Identity.GetSubjectId();
-                var user = await _usermanager.FindByIdAsync(subjectId);
+                string subjectId = User.Identity.GetSubjectId();
+                IdentityUser user = await _usermanager.FindByIdAsync(subjectId);
                 logger.LogInformation($"end all other session for user {user.Email} with subject Id {subjectId}");
 
                 // get the current SessionID for this user
-                var result = await HttpContext.AuthenticateAsync();
-                var sid = result.Properties.Items.FirstOrDefault(x => x.Key == "session_id").Value;
+                AuthenticateResult result = await HttpContext.AuthenticateAsync();
+                string? sid = result.Properties.Items.FirstOrDefault(x => x.Key == "session_id").Value;
                 logger.LogInformation($"current Session ID is {sid}");
 
                 // get all for this user
-                var allSessions = await grantStore.GetAllAsync(new PersistedGrantFilter
+                IEnumerable<PersistedGrant> allSessions = await grantStore.GetAllAsync(new PersistedGrantFilter
                 {
                     SubjectId = subjectId
                 });
 
                 logger.LogInformation($"this user has {allSessions.Count()} sessions");
-                foreach (var s in allSessions)
+                foreach (PersistedGrant s in allSessions)
                 {
-                    var data = s.Data;
+                    string data = s.Data;
                     if (s.SessionId != sid)
                     {
                         // remove the session 
@@ -238,8 +242,8 @@ namespace idsserver
             if (User?.Identity.IsAuthenticated == true)
             {
                 // get user id (which is the SubjectID)
-                var subjectId = User.Identity.GetSubjectId();
-                var user = await _usermanager.FindByIdAsync(subjectId);
+                string subjectId = User.Identity.GetSubjectId();
+                IdentityUser user = await _usermanager.FindByIdAsync(subjectId);
                 logger.LogInformation($"end all other session for user {user.Email} with subject Id {subjectId}");
                 await grantService.RemoveAllGrantsAsync(subjectId);
 
@@ -256,7 +260,7 @@ namespace idsserver
             if (User?.Identity.IsAuthenticated == true)
             {
                 // get user id (which is the SubjectID)
-                var validationResponse = await _manager.ValidateSecurityStampAsync(User);
+                IdentityUser validationResponse = await _manager.ValidateSecurityStampAsync(User);
                 return Ok(validationResponse == null ? "empty" : "not_empty");
             }
 

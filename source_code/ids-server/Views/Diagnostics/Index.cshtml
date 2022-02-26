@@ -1,3 +1,4 @@
+@using System.Security.Claims
 @model DiagnosticsViewModel
 
 <div class="diagnostics-page">
@@ -13,7 +14,7 @@
                 </div>
                 <div class="card-body">
                     <dl>
-                        @foreach (var claim in Model.AuthenticateResult.Principal.Claims)
+                        @foreach (Claim claim in Model.AuthenticateResult.Principal.Claims)
                         {
                             <dt>@claim.Type</dt>
                             <dd>@claim.Value</dd>
@@ -30,7 +31,7 @@
                 </div>
                 <div class="card-body">
                     <dl>
-                        @foreach (var prop in Model.AuthenticateResult.Properties.Items)
+                        @foreach (KeyValuePair<string, string?> prop in Model.AuthenticateResult.Properties.Items)
                         {
                             <dt>@prop.Key</dt>
                             <dd>@prop.Value</dd>
@@ -40,8 +41,8 @@
                             <dt>Clients</dt>
                             <dd>
                             @{
-                                var clients = Model.Clients.ToArray();
-                                for(var i = 0; i < clients.Length; i++)
+                                string[] clients = Model.Clients.ToArray();
+                                for(int i = 0; i < clients.Length; i++)
                                 {
                                     <text>@clients[i]</text>
                                     if (i < clients.Length - 1)

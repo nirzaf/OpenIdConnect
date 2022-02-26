@@ -26,14 +26,14 @@ namespace weatherapi
                 .AddJwtBearer("Bearer", options =>
                 {
                     options.Audience = "weatherapi";
-                    var issuer = Configuration.GetValue<string>("IDSServer");
+                    string issuer = Configuration.GetValue<string>("IDSServer");
 
                     if (issuer.StartsWith("http"))
                         options.Authority = issuer; // Issued by identity server
                     else
                     {
                         // this is self issued
-                        var signKey = Configuration.GetValue<string>("IssuerSigningKey");
+                        string signKey = Configuration.GetValue<string>("IssuerSigningKey");
                         options.TokenValidationParameters = new TokenValidationParameters
                         {
                             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signKey)),

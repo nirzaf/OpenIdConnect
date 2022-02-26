@@ -34,7 +34,7 @@ namespace idsserver
         [HttpGet]
         public async Task<IActionResult> IsTwoFactorEnabled()
         {
-            var user = await _userManager.GetUserAsync(User);
+            IdentityUser user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
             bool isTwoFactorEnabled = await _userManager.GetTwoFactorEnabledAsync(user);
             return Ok(isTwoFactorEnabled);
@@ -43,7 +43,7 @@ namespace idsserver
         [HttpPut]
         public async Task<IActionResult> EnableTwoFactor([FromBody] TwoFactorCodeRequest code)
         {
-            var user = await _userManager.GetUserAsync(User);
+            IdentityUser user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
             _logger.LogInformation($"turning 2FA for user with code {code.Code}");
 
@@ -62,18 +62,18 @@ namespace idsserver
         [HttpGet]
         public async Task<IActionResult> AuthenticatorUri()
         {
-            var user = await _userManager.GetUserAsync(User);
+            IdentityUser user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
-            var unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
+            string unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
             if (string.IsNullOrEmpty(unformattedKey))
             {
                 await _userManager.ResetAuthenticatorKeyAsync(user);
                 unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
             }
 
-            var sharedKey = HelperClass.FormatKey(unformattedKey);
-            var email = await _userManager.GetEmailAsync(user);
-            var authenticatorUri = HelperClass.GenerateQrCodeUri(email, unformattedKey);
+            string sharedKey = HelperClass.FormatKey(unformattedKey);
+            string email = await _userManager.GetEmailAsync(user);
+            string authenticatorUri = HelperClass.GenerateQrCodeUri(email, unformattedKey);
 
             return Ok(new
             {
@@ -89,7 +89,7 @@ namespace idsserver
         [HttpPut]
         public async Task<IActionResult> DisableTwoFactor()
         {
-            var user = await _userManager.GetUserAsync(User);
+            IdentityUser user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
             await _userManager.SetTwoFactorEnabledAsync(user, false);
             return Ok();

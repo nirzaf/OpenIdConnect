@@ -26,10 +26,8 @@ namespace idsserver
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            var connectStr = Configuration.GetConnectionString("DefaultConnection");
-
-            var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
-
+            string connectStr = Configuration.GetConnectionString("DefaultConnection");
+            string? migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
             services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
@@ -80,7 +78,7 @@ namespace idsserver
             // out of the box provided profile service for ASP.NET Identity
             services.AddScoped<ProfileService<IdentityUser>>();
             // add views
-            var mvcBuilder = services.AddControllersWithViews();
+            IMvcBuilder mvcBuilder = services.AddControllersWithViews();
 
             // auto rebuild the razor files
 #if DEBUG

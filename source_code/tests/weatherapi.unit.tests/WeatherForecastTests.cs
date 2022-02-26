@@ -12,7 +12,7 @@ namespace weatherapi.unit.tests
         public void CanReturnCorrectFahrenheit(int inputInC, int expectedInF)
         {
             // Arrange
-            var temp = new WeatherForecast
+            WeatherForecast temp = new WeatherForecast
             {
                 // Act
                 TemperatureC = inputInC
