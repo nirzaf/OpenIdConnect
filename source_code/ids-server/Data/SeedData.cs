@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Mappers;
 using Duende.IdentityServer.Models;
 using IdentityModel;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using static System.Console;
+using static Duende.IdentityServer.IdentityServerConstants;
 
 namespace idsserver
 {
@@ -17,7 +20,7 @@ namespace idsserver
 
         public static void SeedIdentityServer(IServiceProvider serviceProvider)
         {
-            Console.WriteLine("Seeding data for Identity server");
+            WriteLine("Seeding data for Identity server");
 
             var context = serviceProvider
                 .GetRequiredService<ConfigurationDbContext>();
@@ -30,88 +33,83 @@ namespace idsserver
             SeedTestUsers(userMng);
         }
 
-        private static void SeedTestUsers(UserManager<IdentityUser> manager)
+        private static async Task SeedTestUsers(UserManager<IdentityUser> manager)
         {
-            var alice = manager.FindByNameAsync("alice").Result;
-            if (alice == null)
+            var basicUser = manager.FindByNameAsync("fazrin@gmail.com").Result;
+            if (basicUser is null)
             {
-                alice = new IdentityUser
+                basicUser = new IdentityUser
                 {
-                    UserName = "alice",
-                    Email = "alice@test.com",
+                    UserName = "fazrin@gmail.com",
+                    Email = "fazrin@gmail.com",
                     EmailConfirmed = true
                 };
-                var result = manager.CreateAsync(alice, "alice").Result;
+                var result = manager.CreateAsync(basicUser, "123@Pa$$word!").Result;
 
                 if (result.Succeeded)
                 {
-                    result = manager.AddClaimsAsync(alice, new Claim[]
+                    result = await manager.AddClaimsAsync(basicUser, new Claim[]
                     {
-                        new(JwtClaimTypes.Name, "Alice Smith"),
-                        new(JwtClaimTypes.GivenName, "Alice"),
-                        new(JwtClaimTypes.FamilyName, "Smith"),
-                        new(JwtClaimTypes.WebSite, "Website")
-                    }).Result;
+                        new(JwtClaimTypes.Name, "M.F.M Fazrin"),
+                        new(JwtClaimTypes.GivenName, "Fazrin"),
+                        new(JwtClaimTypes.FamilyName, "Farook"),
+                        new(JwtClaimTypes.PhoneNumber, "+94772049123"),
+                        new(JwtClaimTypes.WebSite, "https://nirzaf.github.io")
+                    });
 
-                    Console.WriteLine("added alice user");
+                    if (result.Succeeded)
+                    {
+                        WriteLine("Basic user added");
+                    }
                 }
             }
             else
             {
-                Console.WriteLine("alice already created");
+                WriteLine("Basic already created");
             }
 
             // bob need 2FA
-            var bob = manager.FindByNameAsync("bob").Result;
-            if (bob == null)
+            var adminUser = await manager.FindByNameAsync("mfmfazrin1986@gmail.com");
+            if (adminUser is null)
             {
-                bob = new IdentityUser
+                adminUser = new IdentityUser
                 {
-                    UserName = "bob",
-                    Email = "bob@test.com",
+                    UserName = "mfmfazrin1986@gmail.com",
+                    Email = "mfmfazrin1986@gmail.com",
                     EmailConfirmed = true
                 };
-                var result = manager.CreateAsync(bob, "bob").Result;
+                var result = await manager.CreateAsync(adminUser, "123@Pa$$word!");
 
                 if (result.Succeeded)
                 {
-                    result = manager.AddClaimsAsync(bob, new Claim[]
+                    result = await manager.AddClaimsAsync(adminUser, new Claim[]
                     {
-                        new(JwtClaimTypes.Name, "bob Smith"),
-                        new(JwtClaimTypes.GivenName, "bob"),
-                        new(JwtClaimTypes.FamilyName, "Smith"),
-                        new(JwtClaimTypes.WebSite, "Website")
-                    }).Result;
+                        new(JwtClaimTypes.Name, "Super Admin"),
+                        new(JwtClaimTypes.GivenName, "Admin"),
+                        new(JwtClaimTypes.FamilyName, "Administrator"),
+                        new(JwtClaimTypes.WebSite, "https://my-clay.com")
+                    });
 
-                    Console.WriteLine("added bob user");
+                    WriteLine("Admin user added");
 
-                    var t = manager.ResetAuthenticatorKeyAsync(bob).Result;
-                    var unformattedKey = manager.GetAuthenticatorKeyAsync(bob).Result;
-
+                    var raka = await manager.ResetAuthenticatorKeyAsync(adminUser);
+                    var unformattedKey = await manager.GetAuthenticatorKeyAsync(adminUser);
                     var sharedKey = HelperClass.FormatKey(unformattedKey);
-
-                    var email = manager.GetEmailAsync(bob).Result;
-
+                    var email = await manager.GetEmailAsync(adminUser);
                     var authenticatorUri = HelperClass.GenerateQrCodeUri(email, unformattedKey);
-
-                    t = manager.SetTwoFactorEnabledAsync(bob, true).Result;
-
-                    Console.WriteLine("Enabled 2FA with Authenticator URL: " + authenticatorUri);
+                    raka = await manager.SetTwoFactorEnabledAsync(adminUser, true);
+                    WriteLine("Enabled 2FA with Authenticator URL: " + authenticatorUri);
                 }
             }
             else
             {
-                var unformattedKey = manager.GetAuthenticatorKeyAsync(bob).Result;
-                var isEnabled = manager.GetTwoFactorEnabledAsync(bob).Result;
-
+                var unformattedKey = await manager.GetAuthenticatorKeyAsync(adminUser);
+                var isEnabled = await manager.GetTwoFactorEnabledAsync(adminUser);
                 var sharedKey = HelperClass.FormatKey(unformattedKey);
-
-                var email = manager.GetEmailAsync(bob).Result;
-
+                var email = await manager.GetEmailAsync(adminUser);
                 var authenticatorUri = HelperClass.GenerateQrCodeUri(email, unformattedKey);
-
-                Console.WriteLine("bob already created");
-                Console.WriteLine($"2FA enabled = {isEnabled}, with Authenticator URL: " + authenticatorUri);
+                WriteLine("Admin already created");
+                WriteLine($"2FA enabled = {isEnabled}, with Authenticator URL: " + authenticatorUri);
             }
         }
 
@@ -178,6 +176,41 @@ namespace idsserver
                         {
                             "openid", "profile", "weatherapi.read"
                         }
+                    },
+                    new()
+                    {
+                        ClientId = "clayAdmin",
+                        ClientName = "Clay Solutions",
+                        ClientSecrets = { new Secret("clay".Sha256()) },
+                        AllowedGrantTypes = GrantTypes.ClientCredentials,
+                        AllowOfflineAccess = true,
+                        AllowedScopes = new List<string>
+                        {
+                            "unlockapi.read",
+                            "unlockapi.write",
+                            StandardScopes.OpenId,
+                            StandardScopes.Profile,
+                            StandardScopes.Email
+                        },
+
+                        RedirectUris = { "https://localhost:44377/api/identity/token" }
+                    },
+                    new()
+                    {
+                        ClientId = "clayUser",
+                        ClientName = "Clay Employees",
+                        ClientSecrets = { new Secret("bricks".Sha256()) },
+                        AllowedGrantTypes = GrantTypes.ClientCredentials,
+                        RedirectUris = { "https://localhost:44377/api/identity/token" },
+                        AllowOfflineAccess = true,
+                        AllowedScopes = new List<string>
+                        {
+                            "unlockapi.read",
+                            "unlockapi.write",
+                            StandardScopes.OpenId,
+                            StandardScopes.Profile,
+                            StandardScopes.Email
+                        }
                     }
                 };
 
@@ -187,11 +220,11 @@ namespace idsserver
                 }
 
                 context.SaveChanges();
-                Console.WriteLine($"Added {clients.Count()} clients");
+                WriteLine($"Added {clients.Count()} clients");
             }
             else
             {
-                Console.WriteLine("clients already added..");
+                WriteLine("clients already added..");
             }
 
             if (!context.ApiResources.Any())
@@ -210,11 +243,11 @@ namespace idsserver
                 }
 
                 context.SaveChanges();
-                Console.WriteLine($"Added {apiResources.Count()} api resources");
+                WriteLine($"Added {apiResources.Count()} api resources");
             }
             else
             {
-                Console.WriteLine("api resources already added..");
+                WriteLine("api resources already added..");
             }
 
 
@@ -232,11 +265,11 @@ namespace idsserver
                 }
 
                 context.SaveChanges();
-                Console.WriteLine($"Added {scopes.Count()} api scopes");
+                WriteLine($"Added {scopes.Count()} api scopes");
             }
             else
             {
-                Console.WriteLine("api scopes already added..");
+                WriteLine("api scopes already added..");
             }
 
             if (!context.IdentityResources.Any())
@@ -254,11 +287,11 @@ namespace idsserver
                 }
 
                 context.SaveChanges();
-                Console.WriteLine($"Added {identityResources.Count()} identity Resources");
+                WriteLine($"Added {identityResources.Count()} identity Resources");
             }
             else
             {
-                Console.WriteLine("api scopes already added..");
+                WriteLine("api scopes already added..");
             }
         }
     }

@@ -34,9 +34,9 @@ namespace idsserver
     {
         private readonly ProfileService<IdentityUser> _builtInService;
         private readonly IUserClaimsPrincipalFactory<IdentityUser> _claimsFactory;
+        private readonly ILogger<CustomProfileService> _logger;
+        private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly ILogger<CustomProfileService> logger;
-        private readonly SignInManager<IdentityUser> signInManager;
 
         public CustomProfileService(
             UserManager<IdentityUser> userManager,
@@ -49,8 +49,8 @@ namespace idsserver
             _userManager = userManager;
             _claimsFactory = claimsFactory;
             _builtInService = builtInService;
-            this.logger = logger;
-            this.signInManager = signInManager;
+            _logger = logger;
+            _signInManager = signInManager;
         }
 
         public async Task GetProfileDataAsync(ProfileDataRequestContext context)
@@ -58,7 +58,7 @@ namespace idsserver
             // always include roles list and display name 
             // we could also check for requested scope by looking at context.RequestedResources.RawScopeValues
             // this is inside the access token, we always want to return name,userType and Permissions array
-            logger.LogInformation($"always return Name and SID claims");
+            _logger.LogInformation($"always return Name and SID claims");
 
             // context.IssuedClaims.Add(context.Subject.FindFirst(JwtClaimTypes.Name));
             // context.IssuedClaims.Add(context.Subject.FindFirst(JwtClaimTypes.SessionId));
@@ -70,8 +70,8 @@ namespace idsserver
         {
             if (context.Subject.Identity?.AuthenticationType == IdentityConstants.ApplicationScheme)
             {
-                logger.LogInformation($"checking if user still valid");
-                var validationResponse = await signInManager.ValidateSecurityStampAsync(context.Subject);
+                _logger.LogInformation($"checking if user still valid");
+                var validationResponse = await _signInManager.ValidateSecurityStampAsync(context.Subject);
 
                 if (validationResponse == null)
                 {
