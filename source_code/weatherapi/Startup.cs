@@ -38,7 +38,8 @@ namespace weatherapi
                         {
                             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signKey)),
                             ValidateIssuer = true,
-                            ValidIssuer = issuer
+                            ValidIssuer = issuer,
+                            SaveSigninToken = true
                         };
                     }
                 });
