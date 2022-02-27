@@ -28,7 +28,7 @@ namespace weatherapi.Controllers
         public IEnumerable<WeatherForecast> Get()
         {
             Random rng = new();
-            WeatherForecast[] data = Range(1, 5).Select(index => new WeatherForecast
+            WeatherForecast[] data = Range(1, 15).Select(index => new WeatherForecast
                 {
                     Date = DateTime.Now.AddDays(index),
                     TemperatureC = rng.Next(-20, 55),
