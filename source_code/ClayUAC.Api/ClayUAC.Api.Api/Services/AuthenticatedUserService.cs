@@ -1,6 +1,6 @@
-﻿using ClayUAC.Api.Application.Interfaces.Shared;
+﻿using System.Security.Claims;
+using ClayUAC.Api.Application.Interfaces.Shared;
 using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 
 namespace ClayUAC.Api.Api.Services
 {
