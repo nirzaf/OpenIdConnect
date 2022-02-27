@@ -34,6 +34,7 @@
   <ItemGroup>
     <Folder Include="Migrations\ApplicationDb\" />
     <Folder Include="Migrations\ConfigurationDb\" />
+    <Folder Include="Migrations\PersistedGrantDb\" />
   </ItemGroup>
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
     <Exec Command="node --version" ContinueOnError="true">

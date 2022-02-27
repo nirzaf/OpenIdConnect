@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Reflection;
 using Duende.IdentityServer.AspNetIdentity;
@@ -26,11 +27,12 @@ namespace idsserver
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            string sqLiteDb = "Data Source=IdentityServer.db";
             string connectStr = Configuration.GetConnectionString("DefaultConnection");
             string? migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseSqlServer(connectStr, b =>
+                options.UseSqlite(sqLiteDb, b =>
                     b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
             });
 
@@ -64,13 +66,13 @@ namespace idsserver
                 .AddConfigurationStore(options =>
                 {
                     options.ConfigureDbContext = builder =>
-                        builder.UseSqlServer(connectStr,
+                        builder.UseSqlite(sqLiteDb,
                             opt => opt.MigrationsAssembly(migrationAssembly));
                 })
                 .AddOperationalStore(options =>
                 {
                     options.ConfigureDbContext = builder =>
-                        builder.UseSqlServer(connectStr,
+                        builder.UseSqlite(sqLiteDb,
                             opt => opt.MigrationsAssembly(migrationAssembly));
                 })
                 .AddAspNetIdentity<IdentityUser>();
