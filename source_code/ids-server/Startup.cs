@@ -30,7 +30,7 @@ namespace idsserver
             string? migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
+                options.UseInMemoryDatabase(connectStr);
             });
 
             services.AddIdentity<IdentityUser, IdentityRole>(options =>

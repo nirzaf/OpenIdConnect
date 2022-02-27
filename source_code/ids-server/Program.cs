@@ -1,3 +1,4 @@
+#nullable enable
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -15,16 +16,16 @@ namespace idsserver
 
             using (IServiceScope serviceScope = host.Services.CreateScope())
             {
-                ApplicationDbContext? appdbContext = serviceScope.ServiceProvider.GetService<ApplicationDbContext>();
-                appdbContext.Database.Migrate();
+                ApplicationDbContext? appDbContext = serviceScope.ServiceProvider.GetService<ApplicationDbContext>();
+                appDbContext.Database.Migrate();
 
                 PersistedGrantDbContext? persistentdbContext =
                     serviceScope.ServiceProvider.GetService<PersistedGrantDbContext>();
-                persistentdbContext.Database.Migrate();
+                if (persistentdbContext is not null) persistentdbContext.Database.Migrate();
 
                 ConfigurationDbContext? configDbContext =
                     serviceScope.ServiceProvider.GetService<ConfigurationDbContext>();
-                configDbContext.Database.Migrate();
+                configDbContext?.Database.Migrate();
 
                 IConfiguration? conf = serviceScope.ServiceProvider.GetService<IConfiguration>();
                 if (conf.GetValue("SeedData", true))
