@@ -90,7 +90,6 @@ namespace idsserver
                     });
 
                     WriteLine("Admin user added");
-
                     IdentityResult raka = await manager.ResetAuthenticatorKeyAsync(adminUser);
                     string unformattedKey = await manager.GetAuthenticatorKeyAsync(adminUser);
                     string sharedKey = HelperClass.FormatKey(unformattedKey);
@@ -145,25 +144,20 @@ namespace idsserver
                     new Client
                     {
                         ClientId = "interactive.public",
-
                         AllowedGrantTypes = GrantTypes.Code,
                         // this client is SPA, and therefore doesn't need client secret
                         RequireClientSecret = false,
-
                         RedirectUris = { "https://oauth.pstmn.io/v1/callback", "http://localhost:3000/signin-oidc" },
                         PostLogoutRedirectUris = { "http://localhost:3000" },
                         AllowOfflineAccess = true,
-
                         AllowedScopes = { "openid", "profile", "weatherapi.read" }
                     },
                     new Client
                     {
                         // e.g. MVC apps (or any other client apps that can secure the client secret)
                         ClientId = "interactive.private",
-
                         AllowedGrantTypes = GrantTypes.Code,
                         ClientSecrets = { new Secret("SuperSecretPassword".Sha256()) },
-
                         RedirectUris = { "https://oauth.pstmn.io/v1/callback" },
                         PostLogoutRedirectUris = { "http://localhost:3000" },
                         AllowOfflineAccess = true,
@@ -174,19 +168,13 @@ namespace idsserver
                         ClientId = "MvcClient",
                         AllowedGrantTypes = GrantTypes.Code,
                         ClientSecrets = { new Secret("password".Sha256()) },
-
                         PostLogoutRedirectUris =
                             { "https://localhost:5005/signout-callback-oidc", "https://oauth.pstmn.io/v1/callback" },
                         RedirectUris = { "https://localhost:5005/signin-oidc" },
-
                         FrontChannelLogoutUri = "https://localhost:5005/signout-oidc",
-
                         AllowOfflineAccess = true,
-                        // how long the refresh token should live
                         RefreshTokenExpiration = TokenExpiration.Sliding,
                         AbsoluteRefreshTokenLifetime = 600,
-
-                        // this will dictate the Session Cookie on the client app (e.g. MVC)
                         IdentityTokenLifetime = 30,
                         AllowedScopes =
                         {
