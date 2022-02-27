@@ -179,7 +179,7 @@ namespace idsserver
                     new ApiScope("weatherapi.read", "Read Access to API"),
                     new ApiScope("weatherapi.write", "Write Access to API"),
                     new ApiScope("unlockapi.read", "Read Access to API"),
-                    new ApiScope("unlockapi.write", "Write Access to API"),
+                    new ApiScope("unlockapi.write", "Write Access to API")
                 };
 
                 foreach (ApiScope scope in scopes)
