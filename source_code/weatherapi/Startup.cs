@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using weatherapi.Controllers;
@@ -22,11 +23,14 @@ namespace weatherapi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            IdentityModelEventSource.ShowPII = true; 
+
             services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
                 {
                     options.Audience = "weatherapi";
-                    string issuer = Configuration.GetValue<string>("IDSServer");
+                   // string issuer = Configuration.GetValue<string>("IDSServer");
+                    string issuer ="https://localhost:44390";
 
                     if (issuer.StartsWith("http"))
                         options.Authority = issuer; // Issued by identity server

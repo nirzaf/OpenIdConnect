@@ -120,19 +120,9 @@ namespace idsserver
                     new Client
                     {
                         ClientId = "clayUser",
-                        ClientName = "Clay Employees",
-                        ClientSecrets = { new Secret("bricks".Sha256()) },
                         AllowedGrantTypes = GrantTypes.ClientCredentials,
-                        RedirectUris = { "https://localhost:44377/api/identity/token" },
-                        AllowOfflineAccess = true,
-                        AllowedScopes = new List<string>
-                        {
-                            StandardScopes.OpenId,
-                            StandardScopes.Profile,
-                            StandardScopes.Email,
-                            "unlockapi.read",
-                            "unlockapi.write"
-                        }
+                        ClientSecrets = { new Secret("bricks".Sha256()) },
+                        AllowedScopes = { "unlockapi.read" }
                     },
                     new Client
                     {
@@ -140,46 +130,6 @@ namespace idsserver
                         AllowedGrantTypes = GrantTypes.ClientCredentials,
                         ClientSecrets = { new Secret("SuperSecretPassword".Sha256()) },
                         AllowedScopes = { "weatherapi.read" }
-                    },
-                    new Client
-                    {
-                        ClientId = "interactive.public",
-                        AllowedGrantTypes = GrantTypes.Code,
-                        // this client is SPA, and therefore doesn't need client secret
-                        RequireClientSecret = false,
-                        RedirectUris = { "https://oauth.pstmn.io/v1/callback", "http://localhost:3000/signin-oidc" },
-                        PostLogoutRedirectUris = { "http://localhost:3000" },
-                        AllowOfflineAccess = true,
-                        AllowedScopes = { "openid", "profile", "weatherapi.read" }
-                    },
-                    new Client
-                    {
-                        // e.g. MVC apps (or any other client apps that can secure the client secret)
-                        ClientId = "interactive.private",
-                        AllowedGrantTypes = GrantTypes.Code,
-                        ClientSecrets = { new Secret("SuperSecretPassword".Sha256()) },
-                        RedirectUris = { "https://oauth.pstmn.io/v1/callback" },
-                        PostLogoutRedirectUris = { "http://localhost:3000" },
-                        AllowOfflineAccess = true,
-                        AllowedScopes = { "openid", "profile", "weatherapi.read" }
-                    },
-                    new Client
-                    {
-                        ClientId = "MvcClient",
-                        AllowedGrantTypes = GrantTypes.Code,
-                        ClientSecrets = { new Secret("password".Sha256()) },
-                        PostLogoutRedirectUris =
-                            { "https://localhost:5005/signout-callback-oidc", "https://oauth.pstmn.io/v1/callback" },
-                        RedirectUris = { "https://localhost:5005/signin-oidc" },
-                        FrontChannelLogoutUri = "https://localhost:5005/signout-oidc",
-                        AllowOfflineAccess = true,
-                        RefreshTokenExpiration = TokenExpiration.Sliding,
-                        AbsoluteRefreshTokenLifetime = 600,
-                        IdentityTokenLifetime = 30,
-                        AllowedScopes =
-                        {
-                            "openid", "profile", "weatherapi.read"
-                        }
                     }
                 };
 
@@ -187,9 +137,8 @@ namespace idsserver
                 {
                     await context.Clients.AddAsync(client.ToEntity());
                 }
-
                 await context.SaveChangesAsync();
-                WriteLine($"Added {clients.Count()} clients");
+                WriteLine($"Added {clients.Count} clients");
             }
             else
             {
@@ -206,7 +155,7 @@ namespace idsserver
                     },
                     new ApiResource("unlockapi")
                     {
-                        Scopes = { "unlockapi.read", "unlockapi.write" }
+                        Scopes = { "unlockapi.read" }
                     }
                 };
 
@@ -214,7 +163,6 @@ namespace idsserver
                 {
                     context.ApiResources.Add(apiRrc.ToEntity());
                 }
-
                 await context.SaveChangesAsync();
                 WriteLine($"Added {apiResources.Count} api resources");
             }
@@ -229,14 +177,15 @@ namespace idsserver
                 List<ApiScope> scopes = new()
                 {
                     new ApiScope("weatherapi.read", "Read Access to API"),
-                    new ApiScope("weatherapi.write", "Write Access to API")
+                    new ApiScope("weatherapi.write", "Write Access to API"),
+                    new ApiScope("unlockapi.read", "Read Access to API"),
+                    new ApiScope("unlockapi.write", "Write Access to API"),
                 };
 
                 foreach (ApiScope scope in scopes)
                 {
                     context.ApiScopes.Add(scope.ToEntity());
                 }
-
                 await context.SaveChangesAsync();
                 WriteLine($"Added {scopes.Count()} api scopes");
             }
