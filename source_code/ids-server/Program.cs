@@ -17,11 +17,11 @@ namespace idsserver
             using (IServiceScope serviceScope = host.Services.CreateScope())
             {
                 ApplicationDbContext? appDbContext = serviceScope.ServiceProvider.GetService<ApplicationDbContext>();
-                appDbContext.Database.Migrate();
+                appDbContext?.Database.Migrate();
 
-                PersistedGrantDbContext? persistentdbContext =
+                PersistedGrantDbContext? persistentDbContext =
                     serviceScope.ServiceProvider.GetService<PersistedGrantDbContext>();
-                if (persistentdbContext is not null) persistentdbContext.Database.Migrate();
+                persistentDbContext?.Database.Migrate();
 
                 ConfigurationDbContext? configDbContext =
                     serviceScope.ServiceProvider.GetService<ConfigurationDbContext>();
