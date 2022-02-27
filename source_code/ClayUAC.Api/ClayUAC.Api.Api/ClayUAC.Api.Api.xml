@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ClayUAC.Api.Api</name>
+    </assembly>
+    <members>
+        <member name="M:ClayUAC.Api.Api.Controllers.IdentityController.GetTokenAsync(ClayUAC.Api.Application.DTOs.Identity.TokenRequest)">
+            <summary>
+            Generates a JSON Web Token for a valid combination of emailId and password.
+            </summary>
+            <param name="tokenRequest"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
