@@ -14,11 +14,11 @@ using static Duende.IdentityServer.IdentityServerConstants;
 
 namespace idsserver
 {
-    public class DataSeeder
+    public static class DataSeeder
     {
         private const string AuthenticatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
-        public static void SeedIdentityServer(IServiceProvider serviceProvider)
+        public static async Task SeedIdentityServer(IServiceProvider serviceProvider)
         {
             WriteLine("Seeding data for Identity server");
 
@@ -28,9 +28,8 @@ namespace idsserver
             UserManager<IdentityUser> userMng = serviceProvider
                 .GetRequiredService<UserManager<IdentityUser>>();
 
-            SeedData(context);
-
-            SeedTestUsers(userMng);
+            await SeedTestUsers(userMng);
+            await SeedData(context);
         }
 
         private static async Task SeedTestUsers(UserManager<IdentityUser> manager)
@@ -38,7 +37,7 @@ namespace idsserver
             IdentityUser basicUser = manager.FindByNameAsync("fazrin@gmail.com").Result;
             if (basicUser is null)
             {
-                basicUser = new IdentityUser
+                basicUser = new IdentityUser()
                 {
                     UserName = "fazrin@gmail.com",
                     Email = "fazrin@gmail.com",
@@ -72,7 +71,7 @@ namespace idsserver
             IdentityUser adminUser = await manager.FindByNameAsync("mfmfazrin1986@gmail.com");
             if (adminUser is null)
             {
-                adminUser = new IdentityUser
+                adminUser = new IdentityUser()
                 {
                     UserName = "mfmfazrin1986@gmail.com",
                     Email = "mfmfazrin1986@gmail.com",
@@ -113,20 +112,37 @@ namespace idsserver
             }
         }
 
-        private static void SeedData(ConfigurationDbContext context)
+        private static async Task SeedData(ConfigurationDbContext context)
         {
             if (!context.Clients.Any())
             {
-                List<Client> clients = new List<Client>
+                List<Client> clients = new()
                 {
-                    new()
+                    new Client
+                    {
+                        ClientId = "clayUser",
+                        ClientName = "Clay Employees",
+                        ClientSecrets = { new Secret("bricks".Sha256()) },
+                        AllowedGrantTypes = GrantTypes.ClientCredentials,
+                        RedirectUris = { "https://localhost:44377/api/identity/token" },
+                        AllowOfflineAccess = true,
+                        AllowedScopes = new List<string>
+                        {
+                            StandardScopes.OpenId,
+                            StandardScopes.Profile,
+                            StandardScopes.Email,
+                            "unlockapi.read",
+                            "unlockapi.write"
+                        }
+                    },
+                    new Client
                     {
                         ClientId = "m2m.client",
                         AllowedGrantTypes = GrantTypes.ClientCredentials,
                         ClientSecrets = { new Secret("SuperSecretPassword".Sha256()) },
                         AllowedScopes = { "weatherapi.read" }
                     },
-                    new()
+                    new Client
                     {
                         ClientId = "interactive.public",
 
@@ -140,7 +156,7 @@ namespace idsserver
 
                         AllowedScopes = { "openid", "profile", "weatherapi.read" }
                     },
-                    new()
+                    new Client
                     {
                         // e.g. MVC apps (or any other client apps that can secure the client secret)
                         ClientId = "interactive.private",
@@ -153,7 +169,7 @@ namespace idsserver
                         AllowOfflineAccess = true,
                         AllowedScopes = { "openid", "profile", "weatherapi.read" }
                     },
-                    new()
+                    new Client
                     {
                         ClientId = "MvcClient",
                         AllowedGrantTypes = GrantTypes.Code,
@@ -176,50 +192,15 @@ namespace idsserver
                         {
                             "openid", "profile", "weatherapi.read"
                         }
-                    },
-                    new()
-                    {
-                        ClientId = "clayAdmin",
-                        ClientName = "Clay Solutions",
-                        ClientSecrets = { new Secret("clay".Sha256()) },
-                        AllowedGrantTypes = GrantTypes.ClientCredentials,
-                        AllowOfflineAccess = true,
-                        AllowedScopes = new List<string>
-                        {
-                            "unlockapi.read",
-                            "unlockapi.write",
-                            StandardScopes.OpenId,
-                            StandardScopes.Profile,
-                            StandardScopes.Email
-                        },
-
-                        RedirectUris = { "https://localhost:44377/api/identity/token" }
-                    },
-                    new()
-                    {
-                        ClientId = "clayUser",
-                        ClientName = "Clay Employees",
-                        ClientSecrets = { new Secret("bricks".Sha256()) },
-                        AllowedGrantTypes = GrantTypes.ClientCredentials,
-                        RedirectUris = { "https://localhost:44377/api/identity/token" },
-                        AllowOfflineAccess = true,
-                        AllowedScopes = new List<string>
-                        {
-                            "unlockapi.read",
-                            "unlockapi.write",
-                            StandardScopes.OpenId,
-                            StandardScopes.Profile,
-                            StandardScopes.Email
-                        }
                     }
                 };
 
                 foreach (Client client in clients)
                 {
-                    context.Clients.Add(client.ToEntity());
+                    await context.Clients.AddAsync(client.ToEntity());
                 }
 
-                context.SaveChanges();
+                await context.SaveChangesAsync();
                 WriteLine($"Added {clients.Count()} clients");
             }
             else
@@ -229,11 +210,15 @@ namespace idsserver
 
             if (!context.ApiResources.Any())
             {
-                List<ApiResource> apiResources = new List<ApiResource>()
+                List<ApiResource> apiResources = new()
                 {
-                    new("weatherapi")
+                    new ApiResource("weatherapi")
                     {
                         Scopes = { "weatherapi.read" }
+                    },
+                    new ApiResource("unlockapi")
+                    {
+                        Scopes = { "unlockapi.read", "unlockapi.write" }
                     }
                 };
 
@@ -242,8 +227,8 @@ namespace idsserver
                     context.ApiResources.Add(apiRrc.ToEntity());
                 }
 
-                context.SaveChanges();
-                WriteLine($"Added {apiResources.Count()} api resources");
+                await context.SaveChangesAsync();
+                WriteLine($"Added {apiResources.Count} api resources");
             }
             else
             {
@@ -253,10 +238,10 @@ namespace idsserver
 
             if (!context.ApiScopes.Any())
             {
-                List<ApiScope> scopes = new List<ApiScope>
+                List<ApiScope> scopes = new()
                 {
-                    new("weatherapi.read", "Read Access to API"),
-                    new("weatherapi.write", "Write Access to API")
+                    new ApiScope("weatherapi.read", "Read Access to API"),
+                    new ApiScope("weatherapi.write", "Write Access to API")
                 };
 
                 foreach (ApiScope scope in scopes)
@@ -264,7 +249,7 @@ namespace idsserver
                     context.ApiScopes.Add(scope.ToEntity());
                 }
 
-                context.SaveChanges();
+                await context.SaveChangesAsync();
                 WriteLine($"Added {scopes.Count()} api scopes");
             }
             else
@@ -274,7 +259,7 @@ namespace idsserver
 
             if (!context.IdentityResources.Any())
             {
-                List<IdentityResource> identityResources = new List<IdentityResource>
+                List<IdentityResource> identityResources = new()
                 {
                     new IdentityResources.OpenId(),
                     new IdentityResources.Profile(),
@@ -286,7 +271,7 @@ namespace idsserver
                     context.IdentityResources.Add(identity.ToEntity());
                 }
 
-                context.SaveChanges();
+                await context.SaveChangesAsync();
                 WriteLine($"Added {identityResources.Count()} identity Resources");
             }
             else

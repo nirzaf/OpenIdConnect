@@ -30,7 +30,8 @@ namespace idsserver
             string? migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseInMemoryDatabase(connectStr);
+                options.UseSqlServer(connectStr, b =>
+                    b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
             });
 
             services.AddIdentity<IdentityUser, IdentityRole>(options =>
@@ -63,12 +64,14 @@ namespace idsserver
                 .AddConfigurationStore(options =>
                 {
                     options.ConfigureDbContext = builder =>
-                        builder.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
+                        builder.UseSqlServer(connectStr,
+                            opt => opt.MigrationsAssembly(migrationAssembly));
                 })
                 .AddOperationalStore(options =>
                 {
                     options.ConfigureDbContext = builder =>
-                        builder.UseSqlite(connectStr, opt => opt.MigrationsAssembly(migrationAssembly));
+                        builder.UseSqlServer(connectStr,
+                            opt => opt.MigrationsAssembly(migrationAssembly));
                 })
                 .AddAspNetIdentity<IdentityUser>();
 
