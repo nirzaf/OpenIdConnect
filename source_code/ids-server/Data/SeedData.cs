@@ -10,7 +10,6 @@ using IdentityModel;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using static System.Console;
-using static Duende.IdentityServer.IdentityServerConstants;
 
 namespace idsserver
 {
