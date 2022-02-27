@@ -63,7 +63,7 @@ namespace idsserver
             }
             else
             {
-                WriteLine("Basic already created");
+                WriteLine("Basic user already created");
             }
 
             // bob need 2FA
